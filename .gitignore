@@ -23,3 +23,6 @@ iosApp/build/
 
 # macOS
 .DS_Store
+
+# Local planning notes
+PLANO_DE_IMPLEMENTACAO.md
