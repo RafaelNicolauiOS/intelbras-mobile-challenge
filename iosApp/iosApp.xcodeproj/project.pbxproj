@@ -21,6 +21,7 @@
 		D32147516E84D6BA9C6B3238 /* DevicesCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B6202D3E7111A082B83196B /* DevicesCoordinator.swift */; };
 		E7D0848D0C7843277E4B41E6 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B34852826287D430203BC836 /* DashboardView.swift */; };
 		EB1DEEB8ED2984D2DE32D1B2 /* DashboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A325793FEB7515E737393CD /* DashboardViewController.swift */; };
+		F47229F48800911E7538A306 /* StatusMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 999CF9AB76D911B2907ED066 /* StatusMessage.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +36,7 @@
 		860E892CA03455F865F6B189 /* DeviceFormViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceFormViewController.swift; sourceTree = "<group>"; };
 		8BA404AA9251B5A81FE46680 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		8E32F3C11E15E25D811147ED /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
+		999CF9AB76D911B2907ED066 /* StatusMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusMessage.swift; sourceTree = "<group>"; };
 		AF046FFB99830E73063CE4E7 /* DeviceFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceFormView.swift; sourceTree = "<group>"; };
 		B34852826287D430203BC836 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		B43EC0E08445403CA0A6D591 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -79,6 +81,7 @@
 			isa = PBXGroup;
 			children = (
 				255C2FDC6590DC9DF9C70AD0 /* DeviceCard.swift */,
+				999CF9AB76D911B2907ED066 /* StatusMessage.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -234,6 +237,7 @@
 				6EEE701F1D9484D43A862BE9 /* DeviceFormViewController.swift in Sources */,
 				D32147516E84D6BA9C6B3238 /* DevicesCoordinator.swift in Sources */,
 				BAD074E953D5F3F6F43A8728 /* SceneDelegate.swift in Sources */,
+				F47229F48800911E7538A306 /* StatusMessage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

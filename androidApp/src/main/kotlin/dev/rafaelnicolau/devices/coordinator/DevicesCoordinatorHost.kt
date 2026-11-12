@@ -25,6 +25,7 @@ fun DevicesCoordinatorHost(coordinator: DevicesCoordinator = rememberDevicesCoor
                 onAddDevice = coordinator::showAddDevice,
                 onOpenDevice = { coordinator.showDeviceDetails(it.id) },
                 onToggleFavorite = viewModel::toggleFavorite,
+                onRefresh = viewModel::refresh,
             )
         }
 

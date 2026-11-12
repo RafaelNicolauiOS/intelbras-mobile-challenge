@@ -1,31 +1,27 @@
 package dev.rafaelnicolau.devices.di
 
-import dev.rafaelnicolau.devices.models.Device
+import androidx.room.RoomDatabase
+import dev.rafaelnicolau.devices.repository.DefaultDeviceRepository
 import dev.rafaelnicolau.devices.repository.DeviceRepository
-import dev.rafaelnicolau.devices.repository.InMemoryDeviceRepository
+import dev.rafaelnicolau.devices.repository.local.AppDatabase
+import dev.rafaelnicolau.devices.repository.local.buildAppDatabase
+import dev.rafaelnicolau.devices.repository.remote.DeviceApi
+import dev.rafaelnicolau.devices.repository.remote.createHttpClient
 import dev.rafaelnicolau.devices.viewmodel.DashboardViewModel
 import dev.rafaelnicolau.devices.viewmodel.DeviceDetailsViewModel
 
 /**
- * Hand-written composition root so both apps build their ViewModels the same way.
- * Temporary: sample data and manual wiring give way to Koin and the real repository.
+ * Hand-written composition root: builds the object graph once and gives both apps the
+ * same way to obtain ViewModels. Each app calls its platform `initializeApp` at startup.
  */
 object AppContainer {
-    /** Set once by each app at startup, before anything else is requested. */
-    lateinit var apiConfig: ApiConfig
+    lateinit var deviceRepository: DeviceRepository
         private set
 
-    fun initialize(config: ApiConfig) {
-        apiConfig = config
-    }
-
-    val deviceRepository: DeviceRepository by lazy {
-        InMemoryDeviceRepository(
-            listOf(
-                Device.Alarm(id = "sample-alarm", name = "Central da casa", macAddress = "1A2B3C4D5E6F", password = "1234"),
-                Device.Video(id = "sample-video", name = "Câmera da garagem", serial = "ABCDEF1234567", username = "admin", password = "1234"),
-            ),
-        )
+    internal fun initialize(config: ApiConfig, databaseBuilder: RoomDatabase.Builder<AppDatabase>) {
+        val database = databaseBuilder.buildAppDatabase()
+        val api = DeviceApi(createHttpClient(config))
+        deviceRepository = DefaultDeviceRepository(api, database.deviceDao())
     }
 
     fun dashboardViewModel(): DashboardViewModel = DashboardViewModel(deviceRepository)

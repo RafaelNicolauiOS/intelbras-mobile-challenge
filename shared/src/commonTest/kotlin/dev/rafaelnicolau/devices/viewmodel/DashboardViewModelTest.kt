@@ -1,6 +1,8 @@
 package dev.rafaelnicolau.devices.viewmodel
 
 import dev.rafaelnicolau.devices.models.Device
+import dev.rafaelnicolau.devices.models.DeviceError
+import dev.rafaelnicolau.devices.models.Outcome
 import dev.rafaelnicolau.devices.repository.InMemoryDeviceRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -13,6 +15,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -50,5 +53,41 @@ class DashboardViewModelTest {
 
         val state = viewModel.uiState.first { state -> state.devices.any { it.isFavorite } }
         assertEquals(listOf("a1"), state.devices.filter { it.isFavorite }.map { it.id })
+    }
+
+    @Test
+    fun failedSyncKeepsCachedDevicesAndReportsTheError() = runTest {
+        val repository = InMemoryDeviceRepository(listOf(alarm))
+        repository.nextOutcome = Outcome.Failure(DeviceError.NETWORK)
+        val viewModel = DashboardViewModel(repository)
+
+        val state = viewModel.uiState.first { it.error != null }
+
+        assertEquals(DeviceError.NETWORK, state.error)
+        assertEquals(listOf(alarm), state.devices)
+    }
+
+    @Test
+    fun emptyDatabaseStopsLoadingOnceTheFirstSyncFinishes() = runTest {
+        val viewModel = DashboardViewModel(InMemoryDeviceRepository())
+
+        val state = viewModel.uiState.first { !it.isLoading }
+
+        assertEquals(emptyList(), state.devices)
+        assertNull(state.error)
+    }
+
+    @Test
+    fun retryClearsThePreviousError() = runTest {
+        val repository = InMemoryDeviceRepository()
+        repository.nextOutcome = Outcome.Failure(DeviceError.TIMEOUT)
+        val viewModel = DashboardViewModel(repository)
+        viewModel.uiState.first { it.error != null }
+
+        repository.nextOutcome = Outcome.Success(Unit)
+        viewModel.refresh()
+
+        val state = viewModel.uiState.first { it.error == null && !it.isRefreshing }
+        assertNull(state.error)
     }
 }

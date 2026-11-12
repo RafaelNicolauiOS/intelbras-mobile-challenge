@@ -26,6 +26,10 @@ final class DashboardObservable: ObservableObject {
         viewModel.clear()
     }
 
+    func refresh() {
+        viewModel.refresh()
+    }
+
     func toggleFavorite(_ device: Device) {
         viewModel.toggleFavorite(device: device)
     }
