@@ -1,0 +1,7 @@
+// Build settings shared by every configuration.
+// In .xcconfig files "//" starts a comment, so the URL scheme separator is written as "/$()/".
+API_BASE_URL = http:/$()/squadapps.ddns-intelbras.com.br:37025
+API_TOKEN =
+
+// Local, git-ignored overrides (the API token). Copy Secrets.example.xcconfig to create it.
+#include? "Secrets.xcconfig"

@@ -1,0 +1,3 @@
+# Copy these two lines into local.properties (git-ignored) at the project root.
+API_BASE_URL=http://squadapps.ddns-intelbras.com.br:37025
+API_TOKEN=paste-your-token-here

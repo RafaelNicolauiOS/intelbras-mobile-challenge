@@ -5,10 +5,11 @@ plugins {
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "dev.rafaelnicolau.devices.shared"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         minSdk = libs.versions.android.minSdk.get().toInt()
+        withHostTest {}
     }
 
     listOf(
@@ -23,10 +24,12 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.kotlinx.coroutines.core)
+            api(libs.kotlinx.coroutines.core)
+            api(libs.androidx.lifecycle.viewmodel)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }

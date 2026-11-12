@@ -5,6 +5,9 @@ options:
   deploymentTarget:
     iOS: "16.0"
   createIntermediateGroups: true
+configFiles:
+  Debug: Config/Config.xcconfig
+  Release: Config/Config.xcconfig
 settings:
   base:
     SWIFT_VERSION: "5.0"
@@ -20,6 +23,18 @@ targets:
       properties:
         CFBundleDisplayName: Dispositivos
         UILaunchScreen: {}
+        API_BASE_URL: $(API_BASE_URL)
+        API_TOKEN: $(API_TOKEN)
+        NSAppTransportSecurity:
+          NSExceptionDomains:
+            squadapps.ddns-intelbras.com.br:
+              NSExceptionAllowsInsecureHTTPLoads: true
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Default Configuration
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
     settings:
