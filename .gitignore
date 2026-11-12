@@ -1,0 +1,25 @@
+# Secrets — never commit
+local.properties
+iosApp/Config/Secrets.xcconfig
+
+# Gradle / Kotlin
+.gradle/
+build/
+.kotlin/
+*.klib
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+iosApp/build/
+
+# macOS
+.DS_Store
