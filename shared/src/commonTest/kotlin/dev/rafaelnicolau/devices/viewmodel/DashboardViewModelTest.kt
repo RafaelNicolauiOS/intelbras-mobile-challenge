@@ -2,7 +2,10 @@ package dev.rafaelnicolau.devices.viewmodel
 
 import dev.rafaelnicolau.devices.models.Device
 import dev.rafaelnicolau.devices.models.DeviceError
+import dev.rafaelnicolau.devices.models.DeviceFilter
 import dev.rafaelnicolau.devices.models.Outcome
+import dev.rafaelnicolau.devices.models.SuccessKind
+import dev.rafaelnicolau.devices.models.UserMessage
 import dev.rafaelnicolau.devices.repository.InMemoryDeviceRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,14 +34,14 @@ class DashboardViewModelTest {
 
     @Test
     fun startsInLoadingState() = runTest {
-        val viewModel = DashboardViewModel(InMemoryDeviceRepository(listOf(alarm)))
+        val viewModel = DashboardViewModel(InMemoryDeviceRepository(listOf(alarm)), MessageCenter())
 
         assertTrue(viewModel.uiState.value.isLoading)
     }
 
     @Test
     fun exposesDevicesFromRepository() = runTest {
-        val viewModel = DashboardViewModel(InMemoryDeviceRepository(listOf(alarm, video)))
+        val viewModel = DashboardViewModel(InMemoryDeviceRepository(listOf(alarm, video)), MessageCenter())
 
         val state = viewModel.uiState.first { !it.isLoading }
 
@@ -47,7 +50,7 @@ class DashboardViewModelTest {
 
     @Test
     fun toggleFavoriteMarksTheDevice() = runTest {
-        val viewModel = DashboardViewModel(InMemoryDeviceRepository(listOf(alarm, video)))
+        val viewModel = DashboardViewModel(InMemoryDeviceRepository(listOf(alarm, video)), MessageCenter())
 
         viewModel.toggleFavorite(alarm)
 
@@ -59,7 +62,7 @@ class DashboardViewModelTest {
     fun failedSyncKeepsCachedDevicesAndReportsTheError() = runTest {
         val repository = InMemoryDeviceRepository(listOf(alarm))
         repository.nextOutcome = Outcome.Failure(DeviceError.NETWORK)
-        val viewModel = DashboardViewModel(repository)
+        val viewModel = DashboardViewModel(repository, MessageCenter())
 
         val state = viewModel.uiState.first { it.error != null }
 
@@ -69,7 +72,7 @@ class DashboardViewModelTest {
 
     @Test
     fun emptyDatabaseStopsLoadingOnceTheFirstSyncFinishes() = runTest {
-        val viewModel = DashboardViewModel(InMemoryDeviceRepository())
+        val viewModel = DashboardViewModel(InMemoryDeviceRepository(), MessageCenter())
 
         val state = viewModel.uiState.first { !it.isLoading }
 
@@ -81,7 +84,7 @@ class DashboardViewModelTest {
     fun retryClearsThePreviousError() = runTest {
         val repository = InMemoryDeviceRepository()
         repository.nextOutcome = Outcome.Failure(DeviceError.TIMEOUT)
-        val viewModel = DashboardViewModel(repository)
+        val viewModel = DashboardViewModel(repository, MessageCenter())
         viewModel.uiState.first { it.error != null }
 
         repository.nextOutcome = Outcome.Success(Unit)
@@ -89,5 +92,54 @@ class DashboardViewModelTest {
 
         val state = viewModel.uiState.first { it.error == null && !it.isRefreshing }
         assertNull(state.error)
+    }
+
+    @Test
+    fun deleteRemovesTheDeviceAndReportsSuccess() = runTest {
+        val messages = MessageCenter()
+        val viewModel = DashboardViewModel(InMemoryDeviceRepository(listOf(alarm, video)), messages)
+
+        viewModel.delete(alarm)
+
+        assertEquals(UserMessage.Success(SuccessKind.DEVICE_DELETED), messages.messages.first())
+        assertEquals(listOf(video), viewModel.uiState.first { !it.isLoading }.devices)
+    }
+
+    @Test
+    fun failedDeleteKeepsTheDeviceAndReportsTheError() = runTest {
+        val messages = MessageCenter()
+        val repository = InMemoryDeviceRepository(listOf(alarm))
+        val viewModel = DashboardViewModel(repository, messages)
+        viewModel.uiState.first { !it.isRefreshing }
+        repository.nextOutcome = Outcome.Failure(DeviceError.NOT_FOUND)
+
+        viewModel.delete(alarm)
+
+        assertEquals(UserMessage.Failure(DeviceError.NOT_FOUND), messages.messages.first())
+        assertEquals(listOf(alarm), viewModel.uiState.first { !it.isLoading }.devices)
+    }
+
+    @Test
+    fun searchAndChipNarrowTheListTogether() = runTest {
+        val viewModel = DashboardViewModel(InMemoryDeviceRepository(listOf(alarm, video)), MessageCenter())
+
+        viewModel.onFilterSelected(DeviceFilter.CAMERAS)
+        assertEquals(listOf(video), viewModel.uiState.first { it.filter == DeviceFilter.CAMERAS }.devices)
+
+        viewModel.onQueryChange("casa")
+        val state = viewModel.uiState.first { it.query == "casa" }
+        assertEquals(emptyList(), state.devices)
+        assertTrue(state.hasAnyDevice, "an empty search result is not an empty database")
+    }
+
+    @Test
+    fun favoritesChipFollowsFavoriteChanges() = runTest {
+        val viewModel = DashboardViewModel(InMemoryDeviceRepository(listOf(alarm, video)), MessageCenter())
+        viewModel.onFilterSelected(DeviceFilter.FAVORITES)
+        assertEquals(emptyList(), viewModel.uiState.first { it.filter == DeviceFilter.FAVORITES }.devices)
+
+        viewModel.toggleFavorite(video)
+
+        assertEquals(listOf("v1"), viewModel.uiState.first { it.devices.isNotEmpty() }.devices.map { it.id })
     }
 }
