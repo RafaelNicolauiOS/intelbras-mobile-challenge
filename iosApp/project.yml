@@ -51,3 +51,11 @@ targets:
         script: |
           cd "$SRCROOT/.."
           ./gradlew :shared:embedAndSignAppleFrameworkForXcode
+# A shared scheme, so a fresh clone (and CI) can build without opening Xcode first.
+schemes:
+  iosApp:
+    build:
+      targets:
+        iosApp: all
+    run:
+      config: Debug

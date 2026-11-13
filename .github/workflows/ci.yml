@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The real token is never needed here: every test talks to a fake HTTP engine.
+  API_BASE_URL: http://localhost
+  API_TOKEN: ci-placeholder
+
+jobs:
+  android:
+    name: Android — lint, tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Lint
+        run: ./gradlew :androidApp:lintDebug
+      - name: Shared module tests (JVM)
+        run: ./gradlew :shared:testAndroidHostTest
+      - name: Build debug APK
+        run: ./gradlew :androidApp:assembleDebug
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-reports
+          path: |
+            androidApp/build/reports
+            shared/build/reports
+          if-no-files-found: ignore
+
+  ios:
+    name: iOS — shared tests, build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      # Includes the repository tests, which run against a real Room database.
+      - name: Shared module tests (iOS simulator)
+        run: ./gradlew :shared:iosSimulatorArm64Test
+      - name: Build iOS app
+        run: |
+          xcodebuild build \
+            -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-reports
+          path: shared/build/reports
+          if-no-files-found: ignore

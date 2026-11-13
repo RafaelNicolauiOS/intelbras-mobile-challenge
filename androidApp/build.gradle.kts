@@ -13,6 +13,9 @@ val localProperties = Properties().apply {
 
 fun secret(name: String): String = localProperties.getProperty(name) ?: System.getenv(name) ?: ""
 
+// Not a secret: falls back to the challenge API so only the token has to be configured.
+val apiBaseUrl = secret("API_BASE_URL").ifEmpty { "http://squadapps.ddns-intelbras.com.br:37025" }
+
 android {
     namespace = "dev.rafaelnicolau.devices"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -24,7 +27,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        buildConfigField("String", "API_BASE_URL", "\"${secret("API_BASE_URL")}\"")
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         buildConfigField("String", "API_TOKEN", "\"${secret("API_TOKEN")}\"")
     }
 
