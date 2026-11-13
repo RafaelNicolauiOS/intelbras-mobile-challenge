@@ -5,18 +5,27 @@ extension UserMessage {
         switch onEnum(of: self) {
         case .success(let success):
             switch success.kind {
-            case .deviceCreated: return "Dispositivo adicionado."
-            case .deviceUpdated: return "Dispositivo atualizado."
-            case .deviceDeleted: return "Dispositivo removido."
+            case .deviceCreated: return "Dispositivo adicionado"
+            case .deviceUpdated: return "Dispositivo atualizado"
+            case .deviceDeleted: return "Dispositivo removido"
+            case .copied: return "Copiado"
             }
         case .failure(let failure):
             return failure.error.message
         }
     }
+}
 
-    var isFailure: Bool {
-        if case .failure = onEnum(of: self) { return true }
-        return false
+extension DeviceError {
+    var message: String {
+        switch self {
+        case .network: return "Sem conexão. Verifique sua internet."
+        case .timeout: return "O servidor demorou para responder."
+        case .unauthorized: return "Token de acesso inválido ou expirado."
+        case .notFound: return "Dispositivo não encontrado no servidor."
+        case .conflict: return "Já existe um dispositivo com esses dados."
+        case .unknown: return "Algo deu errado. Tente novamente."
+        }
     }
 }
 
@@ -32,10 +41,26 @@ extension FieldError {
 }
 
 extension DeviceType {
+    /// How the type is named in the form selector and in the information screen.
     var label: String {
         switch self {
         case .alarm: return "Alarme"
+        case .video: return "Vídeo"
+        }
+    }
+
+    /// How the type is named as the title of the actions sheet.
+    var sheetTitle: String {
+        switch self {
+        case .alarm: return "Alarme"
         case .video: return "Câmera"
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .alarm: return "light.beacon.max"
+        case .video: return "video"
         }
     }
 }

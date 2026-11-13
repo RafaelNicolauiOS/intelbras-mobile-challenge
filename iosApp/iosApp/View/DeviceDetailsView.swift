@@ -5,19 +5,55 @@ struct DeviceDetailsView: View {
     @ObservedObject var observable: DeviceDetailsObservable
 
     var body: some View {
-        if let device = observable.device {
-            List {
-                LabeledContent("Nome", value: device.name)
-                switch onEnum(of: device) {
-                case .alarm(let alarm):
-                    LabeledContent("MAC", value: alarm.macAddress)
-                case .video(let video):
-                    LabeledContent("Serial", value: video.serial)
-                    LabeledContent("Usuário", value: video.username)
+        VStack(spacing: 12) {
+            if let device = observable.device {
+                AppCard {
+                    HStack(spacing: 12) {
+                        DeviceTypeIcon(type: device.type)
+                        Text(device.name)
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                    .padding(16)
                 }
+                AppCard {
+                    VStack(spacing: 8) {
+                        row("Tipo", device.type.label)
+                        switch onEnum(of: device) {
+                        case .alarm(let alarm):
+                            row("MAC Address", alarm.identifier, canCopy: true)
+                        case .video(let video):
+                            row("Número de série", video.serial, canCopy: true)
+                            row("Usuário", video.username)
+                        }
+                    }
+                    .padding(16)
+                }
+            } else {
+                StatusMessage(message: "Dispositivo não encontrado.")
             }
-        } else {
-            Text("Dispositivo não encontrado")
+            Spacer(minLength: 0)
         }
+        .foregroundStyle(AppColors.text)
+        .padding(16)
+        .background(AppColors.background)
+    }
+
+    private func row(_ label: String, _ value: String, canCopy: Bool = false) -> some View {
+        HStack(spacing: 8) {
+            Text(label)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Text(value)
+            if canCopy {
+                Button {
+                    observable.copy(value)
+                } label: {
+                    Image(systemName: "doc.on.doc")
+                        .font(.system(size: 14))
+                        .frame(width: 32, height: 32)
+                }
+                .accessibilityLabel("Copiar \(label)")
+            }
+        }
+        .font(.system(size: 16))
     }
 }

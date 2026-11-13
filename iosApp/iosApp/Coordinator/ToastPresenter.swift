@@ -12,11 +12,11 @@ final class ToastPresenter {
         self.window = window
     }
 
-    func show(text: String, isFailure: Bool) {
+    func show(text: String) {
         guard let window else { return }
         removeCurrent()
 
-        let host = UIHostingController(rootView: ToastBanner(text: text, isFailure: isFailure))
+        let host = UIHostingController(rootView: ToastBanner(text: text))
         host.view.backgroundColor = .clear
         host.view.translatesAutoresizingMaskIntoConstraints = false
         window.addSubview(host.view)

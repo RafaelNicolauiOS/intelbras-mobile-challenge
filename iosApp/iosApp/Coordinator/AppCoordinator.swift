@@ -1,4 +1,5 @@
 import Shared
+import SwiftUI
 import UIKit
 
 /// Root coordinator: sets up the window and hands over to the first flow.
@@ -20,6 +21,19 @@ final class AppCoordinator: Coordinator {
         childCoordinators.append(devices)
         devices.start()
 
+        // Brand colors for every navigation bar: dark text, green actions, white background.
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor(AppColors.background)
+        appearance.shadowColor = .clear
+        appearance.titleTextAttributes = [.foregroundColor: UIColor(AppColors.text)]
+        navigationController.navigationBar.standardAppearance = appearance
+        navigationController.navigationBar.scrollEdgeAppearance = appearance
+        navigationController.navigationBar.tintColor = UIColor(AppColors.text)
+        window.tintColor = UIColor(AppColors.primary)
+        // The prototype defines a single, light theme.
+        window.overrideUserInterfaceStyle = .light
+
         window.rootViewController = navigationController
         window.makeKeyAndVisible()
         observeMessages()
@@ -31,7 +45,7 @@ final class AppCoordinator: Coordinator {
         let toasts = toasts
         messagesTask = Task {
             for await message in AppContainer.shared.messageCenter.messages {
-                toasts.show(text: message.text, isFailure: message.isFailure)
+                toasts.show(text: message.text)
             }
         }
     }

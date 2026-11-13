@@ -25,10 +25,7 @@ final class DevicesCoordinator: Coordinator {
         let observable = DeviceDetailsObservable(
             viewModel: AppContainer.shared.deviceDetailsViewModel(deviceId: deviceId)
         )
-        let viewController = DeviceDetailsViewController(
-            observable: observable,
-            onEdit: { [weak self] in self?.showEditDevice(deviceId: deviceId) }
-        )
+        let viewController = DeviceDetailsViewController(observable: observable)
         navigationController.pushViewController(viewController, animated: true)
     }
 
@@ -46,7 +43,11 @@ final class DevicesCoordinator: Coordinator {
             viewModel: AppContainer.shared.deviceFormViewModel(deviceId: deviceId),
             onSaved: { [weak self] in self?.navigationController.popViewController(animated: true) }
         )
-        let viewController = DeviceFormViewController(observable: observable, isEditing: deviceId != nil)
+        let viewController = DeviceFormViewController(
+            observable: observable,
+            isEditing: deviceId != nil,
+            onClose: { [weak self] in self?.navigationController.popViewController(animated: true) }
+        )
         navigationController.pushViewController(viewController, animated: true)
     }
 }

@@ -1,5 +1,6 @@
 import Shared
 import SwiftUI
+import UIKit
 
 /// Bridges the shared Kotlin `DeviceDetailsViewModel` to SwiftUI.
 @MainActor
@@ -22,5 +23,10 @@ final class DeviceDetailsObservable: ObservableObject {
     deinit {
         observation?.cancel()
         viewModel.clear()
+    }
+
+    func copy(_ value: String) {
+        UIPasteboard.general.string = value
+        viewModel.onCopied()
     }
 }
