@@ -1,5 +1,5 @@
 @testable import iosApp
-import Shared
+@preconcurrency import Shared
 import XCTest
 
 @MainActor
@@ -31,9 +31,12 @@ final class DeviceDetailsObservableTests: XCTestCase {
         )
         await waitUntil { observable.device != nil }
 
-        try? await repository.setFavorite(id: "a1", favorite: true)
+        // Through a ViewModel, as the app does: the call stays on the main actor.
+        let dashboard = DashboardViewModel(repository: repository, messages: MessageCenter())
+        dashboard.toggleFavorite(device: Fixtures.alarm)
 
         await waitUntil { observable.device?.isFavorite == true }
+        dashboard.clear()
     }
 
     func testCopyPutsTheValueOnThePasteboardAndConfirms() async {

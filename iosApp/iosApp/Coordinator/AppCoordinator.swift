@@ -1,4 +1,4 @@
-import Shared
+@preconcurrency import Shared
 import SwiftUI
 import UIKit
 
@@ -46,7 +46,7 @@ final class AppCoordinator: Coordinator {
     /// outlives the screen that caused it (e.g. "device added" after the form closes).
     private func observeMessages() {
         let toasts = toasts
-        messagesTask = Task {
+        messagesTask = Task { @MainActor in
             for await message in AppContainer.shared.messageCenter.messages {
                 toasts.show(text: message.text)
             }

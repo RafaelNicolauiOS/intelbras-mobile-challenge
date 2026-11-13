@@ -1,4 +1,4 @@
-import Shared
+@preconcurrency import Shared
 import SwiftUI
 
 /// The square with the device-type icon that leads a device row.
@@ -19,8 +19,8 @@ struct DeviceTypeIcon: View {
 /// All devices inside one card, separated by dividers, as in the prototype.
 struct DeviceListCard: View {
     let devices: [Device]
-    let onOpenDevice: (Device) -> Void
-    let onMore: (Device) -> Void
+    let onOpenDevice: @MainActor (Device) -> Void
+    let onMore: @MainActor (Device) -> Void
 
     var body: some View {
         AppCard {

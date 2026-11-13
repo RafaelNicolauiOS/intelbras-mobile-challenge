@@ -221,6 +221,8 @@ Isso está coberto por testes que usam um banco Room real em memória (`DefaultD
 
 **Um canal único de avisos.** Mensagens de sucesso e erro passam pelo `MessageCenter` e são exibidas acima de todas as telas, para o aviso "Dispositivo adicionado." aparecer mesmo depois de o formulário fechar.
 
+**Concorrência no iOS verificada pelo compilador.** O app iOS compila em Swift 6 com verificação completa de concorrência. Tudo que atualiza uma view ou trata um TextField é `@MainActor`, e o trabalho pesado (como o filtro da busca) roda no `shared`, fora do main thread. Cada tela encerra a observação do ViewModel assim que sai da pilha de navegação, pelo coordinator, e não no `deinit`. Detalhes em [docs/estrategia-desempenho-ios.md](docs/estrategia-desempenho-ios.md).
+
 **Injeção de dependência manual.** O `AppContainer` monta o grafo de objetos. Para um app deste tamanho é suficiente e não esconde nada; com mais telas eu trocaria por Koin.
 
 ### Interface e protótipo
@@ -256,10 +258,10 @@ Há testes nas três camadas: regras de negócio no `shared` e a camada de apres
 
 | Suíte | Onde roda | Testes |
 |---|---|---:|
-| `shared` (commonTest) | JVM | 98 |
-| `shared` (commonTest + iosTest) | Simulador iOS | 119 |
-| `androidApp` | JVM, com Robolectric | 64 |
-| `iosAppTests` | Simulador iOS | 47 |
+| `shared` (commonTest) | JVM | 104 |
+| `shared` (commonTest + iosTest) | Simulador iOS | 125 |
+| `androidApp` | JVM, com Robolectric | 69 |
+| `iosAppTests` | Simulador iOS | 59 |
 
 O alvo iOS do `shared` tem mais testes porque inclui os de repositório e DAO, que usam um Room real em memória e só rodam no simulador iOS (no Android, o Room exige um `Context`).
 
@@ -268,7 +270,7 @@ O alvo iOS do `shared` tem mais testes porque inclui os de repositório e DAO, q
 | Arquivo | O que verifica |
 |---|---|
 | `DeviceValidatorTest` | Campos obrigatórios, formato do MAC, senha do alarme com 4 ou 6 dígitos |
-| `DeviceFilterTest` | Chips e busca por nome, ignorando maiúsculas e acentos |
+| `DeviceFilterTest` | Chips e busca por nome, ignorando maiúsculas e acentos; normalização calculada uma vez por dispositivo |
 | `DeviceTest` | Tipo e identificador de cada dispositivo, `hasErrors` do formulário |
 | `DeviceApiTest` | Método e URL de cada endpoint, token no cabeçalho, corpo JSON, tradução de erros, log sem o token |
 | `ApiCallTest` | Tempo esgotado (cliente e 408/504), status desconhecidos, exceções inesperadas, cancelamento repassado |
@@ -276,7 +278,7 @@ O alvo iOS do `shared` tem mais testes porque inclui os de repositório e DAO, q
 | `InMemoryDeviceRepositoryTest` | O repositório falso usado nos testes se comporta como o real |
 | `DefaultDeviceRepositoryTest` | Sincronização com banco real: favoritos preservados, remoção no servidor, falha parcial, criar, editar, remover, ordenação |
 | `DeviceDaoTest` | SQL do DAO: upsert, substituição por tipo, favoritos órfãos, remoção com o favorito |
-| `DashboardViewModelTest` | Carregamento, refresh, erro com dados em cache, busca, filtros, contagem, favoritar, remover |
+| `DashboardViewModelTest` | Carregamento, refresh, erro com dados em cache, busca com `debounce`, filtros, contagem, favoritar, remover |
 | `DeviceFormViewModelTest` | Validação dos dois tipos, limpeza de erros, criação, edição pré-preenchida, envio duplo, conflito 409, nova tentativa |
 | `DeviceDetailsViewModelTest` | Dispositivo exibido, atualizado e removido; aviso de cópia; `clear()` encerra o escopo |
 | `MessageCenterTest` | Cada aviso chega uma única vez, em ordem, mesmo se postado antes de alguém escutar |
@@ -287,7 +289,7 @@ Os testes ficam em `androidApp/src/test` e renderizam as telas Compose de verdad
 
 | Arquivo | O que verifica |
 |---|---|
-| `DashboardScreenTest` | Lista, contagem, carregamento, estados vazio e de erro, busca, chips, bottom sheet de ações e confirmação de remoção |
+| `DashboardScreenTest` | Lista, contagem, carregamento, estados vazio e de erro, busca, chips, bottom sheet de ações, confirmação de remoção; teclado abre ao tocar em qualquer parte da busca e fecha ao tocar fora |
 | `DeviceFormScreenTest` | Modo adicionar e editar, campos por tipo, erros por campo, botão "Salvar" desabilitado, mostrar e ocultar senha |
 | `DeviceDetailsScreenTest` | Dados de cada tipo, cópia do MAC e do número de série, senha nunca exibida, dispositivo não encontrado |
 | `ComponentsTest` | Componentes isolados: busca, chips, card da lista, bottom sheet, diálogo de remoção, mensagem de status |
@@ -306,6 +308,8 @@ O target `iosAppTests` é hospedado pelo app e usa o framework `Shared` já embu
 | `ViewControllerTests` | Títulos, botões "Fechar" e "Salvar", barra de navegação oculta no dashboard |
 | `TextsTests`, `AppThemeTests` | Textos em português, ícones SF Symbols existentes, cores e fonte Open Sans |
 | `ViewRenderingTests` | Cada view e componente SwiftUI renderiza em todos os estados |
+| `LifecycleTests` | Sair da tela (voltar, fechar, salvar) encerra a observação do ViewModel; telas ainda na pilha continuam observando |
+| `PerformanceTests` | Tecla na busca abaixo de 2 ms no main thread com 1.000 dispositivos, resultado publicado no main thread, um render por tecla no formulário |
 
 O SwiftUI não tem API pública para inspecionar a árvore de views. Por isso as views têm testes de renderização, e o comportamento por trás delas é testado nas pontes e no `shared`. A cobertura do código Swift do app é de cerca de 93%.
 
@@ -320,7 +324,7 @@ Os relatórios de teste (incluindo o `.xcresult` do iOS) ficam disponíveis como
 
 ### Desempenho
 
-Há uma análise de desempenho, com medições da busca do dashboard na JVM e no Kotlin/Native, em [docs/analise-de-desempenho.md](docs/analise-de-desempenho.md).
+Há uma análise de desempenho, com medições da busca do dashboard na JVM e no Kotlin/Native, em [docs/analise-de-desempenho.md](docs/analise-de-desempenho.md). O plano para o iOS, com o main thread reservado para TextFields e atualizações de view e o trabalho pesado fora dele, está em [docs/estrategia-desempenho-ios.md](docs/estrategia-desempenho-ios.md).
 
 ## O que ficou pendente e o que eu melhoraria
 

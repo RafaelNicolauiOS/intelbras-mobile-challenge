@@ -23,10 +23,14 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -38,6 +42,7 @@ import dev.rafaelnicolau.devices.view.components.DeviceListCard
 import dev.rafaelnicolau.devices.view.components.FilterChipsRow
 import dev.rafaelnicolau.devices.view.components.SearchField
 import dev.rafaelnicolau.devices.view.components.StatusMessage
+import dev.rafaelnicolau.devices.view.components.clearFocusOnTapOutside
 import dev.rafaelnicolau.devices.view.components.message
 import dev.rafaelnicolau.devices.view.theme.AppColors
 import dev.rafaelnicolau.devices.view.theme.AppShapes
@@ -61,6 +66,8 @@ fun DashboardScreen(
     // Ids, not devices: the sheet and dialog always show the current data from the state.
     var sheetDeviceId by rememberSaveable { mutableStateOf<String?>(null) }
     var deleteDeviceId by rememberSaveable { mutableStateOf<String?>(null) }
+    // Where the search field is, so a tap can be told apart as inside or outside it.
+    var searchBounds by remember { mutableStateOf<Rect?>(null) }
 
     state.devices.firstOrNull { it.id == sheetDeviceId }?.let { device ->
         DeviceActionsSheet(
@@ -83,6 +90,8 @@ fun DashboardScreen(
     }
 
     Scaffold(
+        // A tap anywhere outside the search field closes the keyboard, as on iOS.
+        modifier = Modifier.clearFocusOnTapOutside { searchBounds },
         containerColor = AppColors.Background,
         bottomBar = { AddDeviceButton(onClick = onAddDevice) },
     ) { padding ->
@@ -102,7 +111,12 @@ fun DashboardScreen(
             // Search and chips stay on screen whenever there is something to search in,
             // including when the current search matches nothing.
             if (state.hasAnyDevice) {
-                SearchField(onQueryChange = onQueryChange, modifier = Modifier.padding(top = 16.dp))
+                SearchField(
+                    onQueryChange = onQueryChange,
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                        .onGloballyPositioned { searchBounds = it.boundsInRoot() },
+                )
                 FilterChipsRow(
                     selected = state.filter,
                     onSelected = onFilterSelected,

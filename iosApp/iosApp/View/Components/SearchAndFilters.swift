@@ -1,11 +1,16 @@
-import Shared
+@preconcurrency import Shared
 import SwiftUI
 
 /// Search by device name. The text being typed is kept here and only reported upwards:
 /// the screen state arrives asynchronously, and echoing it back into the field would
 /// fight with fast typing.
+///
+/// Focus is owned by the screen (`isFocused`), so it can close the keyboard when the user
+/// taps anywhere else. The whole pill is the touch target: tapping the icon or the padding
+/// around the text opens the keyboard too, not only the line of text itself.
 struct SearchField: View {
-    let onQueryChange: (String) -> Void
+    let onQueryChange: @MainActor (String) -> Void
+    var isFocused: FocusState<Bool>.Binding
 
     @State private var text = ""
 
@@ -20,6 +25,7 @@ struct SearchField: View {
                 .tint(AppColors.primary)
                 .autocorrectionDisabled()
                 .submitLabel(.search)
+                .focused(isFocused)
             if !text.isEmpty {
                 Button {
                     text = ""
@@ -34,6 +40,8 @@ struct SearchField: View {
         .padding(.leading, 16)
         .padding(.trailing, text.isEmpty ? 16 : 0)
         .frame(minHeight: 48)
+        .contentShape(Capsule())
+        .onTapGesture { isFocused.wrappedValue = true }
         .background(AppColors.surface, in: Capsule())
         .overlay(Capsule().stroke(AppColors.surfaceStrong, lineWidth: 1))
         .onChange(of: text) { onQueryChange($0) }
@@ -42,7 +50,7 @@ struct SearchField: View {
 
 struct FilterChipsRow: View {
     let selected: DeviceFilter
-    let onSelected: (DeviceFilter) -> Void
+    let onSelected: @MainActor (DeviceFilter) -> Void
 
     private let filters: [DeviceFilter] = [.all, .favorites, .cameras, .alarms]
 

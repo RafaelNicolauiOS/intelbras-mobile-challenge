@@ -1,4 +1,4 @@
-import Shared
+@preconcurrency import Shared
 import SwiftUI
 
 struct DeviceFormView: View {
@@ -21,19 +21,19 @@ struct DeviceFormView: View {
                             typeSelector(selected: state.type)
                         }
 
-                        field("Nome", state.name, state.errors.name, observable.onNameChange)
+                        field("Nome", state.name, state.errors.name, { observable.onNameChange($0) })
 
                         switch state.type {
                         case .alarm:
-                            field("MAC Address", state.macAddress, state.errors.macAddress, observable.onMacAddressChange)
+                            field("MAC Address", state.macAddress, state.errors.macAddress, { observable.onMacAddressChange($0) })
                                 .textInputAutocapitalization(.characters)
-                            field("Senha", state.password, state.errors.password, observable.onPasswordChange, isSecure: true)
+                            field("Senha", state.password, state.errors.password, { observable.onPasswordChange($0) }, isSecure: true)
                                 .keyboardType(.numberPad)
                         case .video:
-                            field("Número de série", state.serial, state.errors.serial, observable.onSerialChange)
-                            field("Usuário", state.username, state.errors.username, observable.onUsernameChange)
+                            field("Número de série", state.serial, state.errors.serial, { observable.onSerialChange($0) })
+                            field("Usuário", state.username, state.errors.username, { observable.onUsernameChange($0) })
                                 .textInputAutocapitalization(.never)
-                            field("Senha", state.password, state.errors.password, observable.onPasswordChange, isSecure: true)
+                            field("Senha", state.password, state.errors.password, { observable.onPasswordChange($0) }, isSecure: true)
                         }
                     }
                     .padding(16)
@@ -75,7 +75,7 @@ struct DeviceFormView: View {
         _ label: String,
         _ text: String,
         _ error: FieldError?,
-        _ onChange: @escaping (String) -> Void,
+        _ onChange: @escaping @MainActor @Sendable (String) -> Void,
         isSecure: Bool = false
     ) -> some View {
         OutlinedField(label: label, text: text, errorText: error?.text, isSecure: isSecure, onChange: onChange)

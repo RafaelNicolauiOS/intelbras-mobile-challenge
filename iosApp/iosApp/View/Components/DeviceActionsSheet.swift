@@ -1,13 +1,13 @@
-import Shared
+@preconcurrency import Shared
 import SwiftUI
 
 /// The options behind a device's "more actions" button. Every choice also dismisses the sheet.
 struct DeviceActionsSheet: View {
     let device: Device
-    let onEdit: () -> Void
-    let onInfo: () -> Void
-    let onToggleFavorite: () -> Void
-    let onDelete: () -> Void
+    let onEdit: @MainActor () -> Void
+    let onInfo: @MainActor () -> Void
+    let onToggleFavorite: @MainActor () -> Void
+    let onDelete: @MainActor () -> Void
 
     @Environment(\.dismiss) private var dismiss
 
@@ -41,7 +41,7 @@ struct DeviceActionsSheet: View {
         _ title: String,
         icon: String,
         color: Color = AppColors.text,
-        perform: @escaping () -> Void
+        perform: @escaping @MainActor () -> Void
     ) -> some View {
         Button {
             dismiss()

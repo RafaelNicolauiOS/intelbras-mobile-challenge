@@ -7,3 +7,11 @@ protocol Coordinator: AnyObject {
     var navigationController: UINavigationController { get }
     func start()
 }
+
+/// A screen whose Observable keeps work running (flow observation, a ViewModel scope).
+/// Its coordinator calls `stopObserving()` as soon as the screen leaves the navigation stack,
+/// on the main actor, instead of relying on when `deinit` happens to run.
+@MainActor
+protocol ObservingScreen: AnyObject {
+    func stopObserving()
+}

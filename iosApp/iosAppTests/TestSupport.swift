@@ -1,7 +1,9 @@
-import Shared
+@preconcurrency import Shared
 import XCTest
 
-/// Devices shared by the iOS tests.
+/// Devices shared by the iOS tests. Kotlin objects are not `Sendable`, so the fixtures
+/// live on the main actor, like every test that uses them.
+@MainActor
 enum Fixtures {
     static let alarm = DeviceAlarm(id: "a1", name: "Central da Casa", isFavorite: false, macAddress: "1A2B3C4D5E6F", password: "1234")
     static let camera = DeviceVideo(id: "v1", name: "Câmera Garagem", isFavorite: true, serial: "SN-001", username: "admin", password: "x")
@@ -32,6 +34,7 @@ extension XCTestCase {
     }
 
     /// The first message the center delivers.
+    @MainActor
     func firstMessage(of center: MessageCenter) async -> UserMessage? {
         for await message in center.messages {
             return message

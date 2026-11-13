@@ -9,10 +9,16 @@ import dev.rafaelnicolau.devices.models.Outcome
 import dev.rafaelnicolau.devices.models.SuccessKind
 import dev.rafaelnicolau.devices.models.UserMessage
 import dev.rafaelnicolau.devices.repository.DeviceRepository
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -34,10 +40,22 @@ data class DashboardUiState(
     val error: DeviceError? = null,
 )
 
+/** How long the search waits for the user to stop typing before filtering. */
+internal const val SEARCH_DEBOUNCE_MS = 120L
+
+/**
+ * [computeDispatcher] runs the filtering, so a keystroke never waits for it: the screen
+ * only records the new query and gets the filtered list back when it is ready. Tests pass
+ * their own dispatcher to keep virtual time.
+ */
 class DashboardViewModel(
     private val repository: DeviceRepository,
     private val messages: MessageCenter,
+    computeDispatcher: CoroutineDispatcher,
 ) : SharedViewModel() {
+
+    constructor(repository: DeviceRepository, messages: MessageCenter) :
+        this(repository, messages, Dispatchers.Default)
 
     private data class SyncState(
         val isRefreshing: Boolean = true,
@@ -51,7 +69,7 @@ class DashboardViewModel(
 
     /** Devices always come from the local database; the sync only adds status around them. */
     val uiState: StateFlow<DashboardUiState> =
-        combine(repository.observeDevices(), sync, query, filter) { devices, sync, query, filter ->
+        combine(repository.observeDevices(), sync, debouncedQuery(), filter) { devices, sync, query, filter ->
             DashboardUiState(
                 isLoading = devices.isEmpty() && !sync.finishedOnce,
                 isRefreshing = sync.isRefreshing,
@@ -62,7 +80,14 @@ class DashboardViewModel(
                 filter = filter,
                 error = sync.error,
             )
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DashboardUiState())
+        }
+            .flowOn(computeDispatcher)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DashboardUiState())
+
+    /** Waits for a pause in typing; an empty query (initial or cleared search) applies at once. */
+    @OptIn(FlowPreview::class)
+    private fun debouncedQuery(): Flow<String> =
+        query.debounce { value -> if (value.isEmpty()) 0L else SEARCH_DEBOUNCE_MS }
 
     init {
         refresh()

@@ -3,7 +3,7 @@ import SwiftUI
 /// Message for empty and error states, with an optional retry action.
 struct StatusMessage: View {
     let message: String
-    var onRetry: (() -> Void)?
+    var onRetry: (@MainActor () -> Void)?
 
     var body: some View {
         VStack(spacing: 8) {

@@ -12,7 +12,11 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -34,16 +38,20 @@ class DashboardViewModelTest {
     @AfterTest
     fun tearDown() = Dispatchers.resetMain()
 
+    /** Filtering runs on the test Main dispatcher, so debounce and timing follow virtual time. */
+    private fun dashboard(repository: DeviceRepository, messages: MessageCenter) =
+        DashboardViewModel(repository, messages, Dispatchers.Main)
+
     @Test
     fun startsInLoadingState() = runTest {
-        val viewModel = DashboardViewModel(InMemoryDeviceRepository(listOf(alarm)), MessageCenter())
+        val viewModel = dashboard(InMemoryDeviceRepository(listOf(alarm)), MessageCenter())
 
         assertTrue(viewModel.uiState.value.isLoading)
     }
 
     @Test
     fun exposesDevicesFromRepository() = runTest {
-        val viewModel = DashboardViewModel(InMemoryDeviceRepository(listOf(alarm, video)), MessageCenter())
+        val viewModel = dashboard(InMemoryDeviceRepository(listOf(alarm, video)), MessageCenter())
 
         val state = viewModel.uiState.first { !it.isLoading }
 
@@ -52,7 +60,7 @@ class DashboardViewModelTest {
 
     @Test
     fun toggleFavoriteMarksTheDevice() = runTest {
-        val viewModel = DashboardViewModel(InMemoryDeviceRepository(listOf(alarm, video)), MessageCenter())
+        val viewModel = dashboard(InMemoryDeviceRepository(listOf(alarm, video)), MessageCenter())
 
         viewModel.toggleFavorite(alarm)
 
@@ -64,7 +72,7 @@ class DashboardViewModelTest {
     fun failedSyncKeepsCachedDevicesAndReportsTheError() = runTest {
         val repository = InMemoryDeviceRepository(listOf(alarm))
         repository.nextOutcome = Outcome.Failure(DeviceError.NETWORK)
-        val viewModel = DashboardViewModel(repository, MessageCenter())
+        val viewModel = dashboard(repository, MessageCenter())
 
         val state = viewModel.uiState.first { it.error != null }
 
@@ -74,7 +82,7 @@ class DashboardViewModelTest {
 
     @Test
     fun emptyDatabaseStopsLoadingOnceTheFirstSyncFinishes() = runTest {
-        val viewModel = DashboardViewModel(InMemoryDeviceRepository(), MessageCenter())
+        val viewModel = dashboard(InMemoryDeviceRepository(), MessageCenter())
 
         val state = viewModel.uiState.first { !it.isLoading }
 
@@ -86,7 +94,7 @@ class DashboardViewModelTest {
     fun retryClearsThePreviousError() = runTest {
         val repository = InMemoryDeviceRepository()
         repository.nextOutcome = Outcome.Failure(DeviceError.TIMEOUT)
-        val viewModel = DashboardViewModel(repository, MessageCenter())
+        val viewModel = dashboard(repository, MessageCenter())
         viewModel.uiState.first { it.error != null }
 
         repository.nextOutcome = Outcome.Success(Unit)
@@ -99,7 +107,7 @@ class DashboardViewModelTest {
     @Test
     fun deleteRemovesTheDeviceAndReportsSuccess() = runTest {
         val messages = MessageCenter()
-        val viewModel = DashboardViewModel(InMemoryDeviceRepository(listOf(alarm, video)), messages)
+        val viewModel = dashboard(InMemoryDeviceRepository(listOf(alarm, video)), messages)
 
         viewModel.delete(alarm)
 
@@ -111,7 +119,7 @@ class DashboardViewModelTest {
     fun failedDeleteKeepsTheDeviceAndReportsTheError() = runTest {
         val messages = MessageCenter()
         val repository = InMemoryDeviceRepository(listOf(alarm))
-        val viewModel = DashboardViewModel(repository, messages)
+        val viewModel = dashboard(repository, messages)
         viewModel.uiState.first { !it.isRefreshing }
         repository.nextOutcome = Outcome.Failure(DeviceError.NOT_FOUND)
 
@@ -123,7 +131,7 @@ class DashboardViewModelTest {
 
     @Test
     fun searchAndChipNarrowTheListTogether() = runTest {
-        val viewModel = DashboardViewModel(InMemoryDeviceRepository(listOf(alarm, video)), MessageCenter())
+        val viewModel = dashboard(InMemoryDeviceRepository(listOf(alarm, video)), MessageCenter())
 
         viewModel.onFilterSelected(DeviceFilter.CAMERAS)
         assertEquals(listOf(video), viewModel.uiState.first { it.filter == DeviceFilter.CAMERAS }.devices)
@@ -136,7 +144,7 @@ class DashboardViewModelTest {
 
     @Test
     fun favoritesChipFollowsFavoriteChanges() = runTest {
-        val viewModel = DashboardViewModel(InMemoryDeviceRepository(listOf(alarm, video)), MessageCenter())
+        val viewModel = dashboard(InMemoryDeviceRepository(listOf(alarm, video)), MessageCenter())
         viewModel.onFilterSelected(DeviceFilter.FAVORITES)
         assertEquals(emptyList(), viewModel.uiState.first { it.filter == DeviceFilter.FAVORITES }.devices)
 
@@ -147,7 +155,7 @@ class DashboardViewModelTest {
 
     @Test
     fun countsEveryStoredDeviceRegardlessOfTheSearch() = runTest {
-        val viewModel = DashboardViewModel(InMemoryDeviceRepository(listOf(alarm, video)), MessageCenter())
+        val viewModel = dashboard(InMemoryDeviceRepository(listOf(alarm, video)), MessageCenter())
 
         viewModel.onQueryChange("garagem")
 
@@ -158,7 +166,7 @@ class DashboardViewModelTest {
 
     @Test
     fun emptyDatabaseHasNoDevices() = runTest {
-        val state = DashboardViewModel(InMemoryDeviceRepository(), MessageCenter()).uiState.first { !it.isLoading }
+        val state = dashboard(InMemoryDeviceRepository(), MessageCenter()).uiState.first { !it.isLoading }
 
         assertEquals(0, state.totalCount)
         assertTrue(!state.hasAnyDevice)
@@ -166,7 +174,7 @@ class DashboardViewModelTest {
 
     @Test
     fun startsWithNoSearchAndTheAllChip() = runTest {
-        val state = DashboardViewModel(InMemoryDeviceRepository(), MessageCenter()).uiState.value
+        val state = dashboard(InMemoryDeviceRepository(), MessageCenter()).uiState.value
 
         assertEquals("", state.query)
         assertEquals(DeviceFilter.ALL, state.filter)
@@ -188,7 +196,7 @@ class DashboardViewModelTest {
     fun refreshReportsProgressUntilTheSyncEnds() = runTest {
         val repository = SlowRefreshRepository(InMemoryDeviceRepository(listOf(alarm)))
         repository.gate.complete(Unit)
-        val viewModel = DashboardViewModel(repository, MessageCenter())
+        val viewModel = dashboard(repository, MessageCenter())
         viewModel.uiState.first { !it.isRefreshing && !it.isLoading }
 
         repository.gate = CompletableDeferred()
@@ -202,7 +210,7 @@ class DashboardViewModelTest {
 
     @Test
     fun togglingAFavoriteTwiceUnmarksIt() = runTest {
-        val viewModel = DashboardViewModel(InMemoryDeviceRepository(listOf(alarm)), MessageCenter())
+        val viewModel = dashboard(InMemoryDeviceRepository(listOf(alarm)), MessageCenter())
         viewModel.toggleFavorite(alarm)
         val marked = viewModel.uiState.first { it.devices.firstOrNull()?.isFavorite == true }.devices.single()
 
@@ -210,5 +218,48 @@ class DashboardViewModelTest {
 
         val unmarked = viewModel.uiState.first { it.devices.firstOrNull()?.isFavorite == false }
         assertTrue(unmarked.devices.none { it.isFavorite })
+    }
+
+    @Test
+    fun searchWaitsForAPauseInTyping() = runTest {
+        val viewModel = dashboard(InMemoryDeviceRepository(listOf(alarm, video)), MessageCenter())
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        advanceUntilIdle()
+
+        viewModel.onQueryChange("g")
+        advanceTimeBy(SEARCH_DEBOUNCE_MS / 2)
+        viewModel.onQueryChange("ga")
+        advanceTimeBy(SEARCH_DEBOUNCE_MS / 2)
+        assertEquals("", viewModel.uiState.value.query, "nothing is filtered while the user types")
+
+        advanceTimeBy(SEARCH_DEBOUNCE_MS)
+        assertEquals("ga", viewModel.uiState.value.query)
+        assertEquals(listOf(video), viewModel.uiState.value.devices)
+    }
+
+    @Test
+    fun clearingTheSearchAppliesImmediately() = runTest {
+        val viewModel = dashboard(InMemoryDeviceRepository(listOf(alarm, video)), MessageCenter())
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        viewModel.onQueryChange("casa")
+        advanceUntilIdle()
+        assertEquals(listOf(alarm), viewModel.uiState.value.devices)
+
+        viewModel.onQueryChange("")
+        runCurrent()
+
+        assertEquals(listOf(alarm, video), viewModel.uiState.value.devices)
+    }
+
+    @Test
+    fun chipsAreNotDebounced() = runTest {
+        val viewModel = dashboard(InMemoryDeviceRepository(listOf(alarm, video)), MessageCenter())
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        advanceUntilIdle()
+
+        viewModel.onFilterSelected(DeviceFilter.ALARMS)
+        runCurrent()
+
+        assertEquals(listOf(alarm), viewModel.uiState.value.devices)
     }
 }

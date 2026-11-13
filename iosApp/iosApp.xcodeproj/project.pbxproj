@@ -8,16 +8,20 @@
 
 /* Begin PBXBuildFile section */
 		0229E590C8BF25BBAB9824DC /* DeviceDetailsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AD68A58C347A4867DA358FE /* DeviceDetailsViewController.swift */; };
+		068CF9F689D81030657777EE /* LifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A95DD2528C7EF4824BA255E /* LifecycleTests.swift */; };
 		0A6E5C7247A659DED1798632 /* ViewControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 785B35E93E814138A3ED882F /* ViewControllerTests.swift */; };
 		0C6556CA450D37E4BE05AF33 /* CoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0964EB9C6A5F67479E75D9 /* CoordinatorTests.swift */; };
 		0D2C87CDA4BD0DDCD639886F /* AppThemeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 612491499C3117A8E5833FCE /* AppThemeTests.swift */; };
 		160FB2BA0D6E81E8E2F0922D /* DeviceDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4EBC1DCD0B2A5AB1CAE6F98 /* DeviceDetailsView.swift */; };
 		308715595987EFBB4424EE28 /* DeviceDetailsObservable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 812FF487EFD40088DE2E79A2 /* DeviceDetailsObservable.swift */; };
+		3E127972EC535BC9A5B9697C /* StatePublishing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B592A5429F6FF5AA2756EBD /* StatePublishing.swift */; };
 		3E7A06815D1F22B3702CF782 /* DeviceFormObservable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76D3E4D3A5F8360840570D32 /* DeviceFormObservable.swift */; };
+		512C3BEC79CD3DF4F93A0CD4 /* SearchFocusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB5170AC0B0CAC0661626F7C /* SearchFocusTests.swift */; };
 		56739A65E7DFD193CA84C8BC /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1793CCD2031E3E7DC08D30C8 /* AppTheme.swift */; };
 		621C0849AD30238FAEDFED8D /* DashboardObservable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DBE8C0646832DBFE7511E0D /* DashboardObservable.swift */; };
 		6E563F5EA06E0F453F5C5E52 /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E32F3C11E15E25D811147ED /* AppCoordinator.swift */; };
 		6EEE701F1D9484D43A862BE9 /* DeviceFormViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 860E892CA03455F865F6B189 /* DeviceFormViewController.swift */; };
+		78EEF898B637084217ED4EF2 /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A9F837F9740C6DF807420A /* PerformanceTests.swift */; };
 		8464CFDBB00AF816ECA5F7AC /* DeviceFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF046FFB99830E73063CE4E7 /* DeviceFormView.swift */; };
 		8FAFEC0B24682CF5BDDC53AD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B43EC0E08445403CA0A6D591 /* AppDelegate.swift */; };
 		93AFDA08E5B68F4A1EB06EED /* DeviceDetailsObservableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4FC903398C02F6A8761FBAF /* DeviceDetailsObservableTests.swift */; };
@@ -35,6 +39,7 @@
 		DBB154833B816D6DE275F79E /* DeviceFormObservableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CD9D9BA315BF5D721C8E425 /* DeviceFormObservableTests.swift */; };
 		DF607563DCB65E45E1D356D9 /* OpenSans-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 89102FACD3C5D312DD4931AD /* OpenSans-Variable.ttf */; };
 		E1FF18CBC3C68B8D0B248700 /* Texts.swift in Sources */ = {isa = PBXBuildFile; fileRef = C728EE8BAE808A43A1545D26 /* Texts.swift */; };
+		E30965C4DD0585BAECB1B304 /* ObservationBag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88912435925203F90FD8B230 /* ObservationBag.swift */; };
 		E376DCD686F6105E563A4AFA /* DashboardObservableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 597F95A0CB029DAFCD6DC351 /* DashboardObservableTests.swift */; };
 		E7D0848D0C7843277E4B41E6 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B34852826287D430203BC836 /* DashboardView.swift */; };
 		E8DAD3DD5B1783C107807E2B /* ViewRenderingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7A0CE2D5E1FC09D0CD23FF /* ViewRenderingTests.swift */; };
@@ -57,6 +62,7 @@
 		1793CCD2031E3E7DC08D30C8 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		185D0B48D26C09282F23F391 /* ToastBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastBanner.swift; sourceTree = "<group>"; };
 		1DBE8C0646832DBFE7511E0D /* DashboardObservable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardObservable.swift; sourceTree = "<group>"; };
+		2B592A5429F6FF5AA2756EBD /* StatePublishing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatePublishing.swift; sourceTree = "<group>"; };
 		2CD9D9BA315BF5D721C8E425 /* DeviceFormObservableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceFormObservableTests.swift; sourceTree = "<group>"; };
 		31CF4EBFDFF1E412CE786B9F /* OutlinedField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlinedField.swift; sourceTree = "<group>"; };
 		37F10FB5D9BBFC926C8785C0 /* DeviceListCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceListCard.swift; sourceTree = "<group>"; };
@@ -67,6 +73,8 @@
 		56583BC252B5F01ED9DEA19D /* iosAppTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = iosAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		597F95A0CB029DAFCD6DC351 /* DashboardObservableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardObservableTests.swift; sourceTree = "<group>"; };
 		612491499C3117A8E5833FCE /* AppThemeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppThemeTests.swift; sourceTree = "<group>"; };
+		63A9F837F9740C6DF807420A /* PerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
+		6A95DD2528C7EF4824BA255E /* LifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifecycleTests.swift; sourceTree = "<group>"; };
 		6B6202D3E7111A082B83196B /* DevicesCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesCoordinator.swift; sourceTree = "<group>"; };
 		76D3E4D3A5F8360840570D32 /* DeviceFormObservable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceFormObservable.swift; sourceTree = "<group>"; };
 		785B35E93E814138A3ED882F /* ViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewControllerTests.swift; sourceTree = "<group>"; };
@@ -75,6 +83,7 @@
 		812FF487EFD40088DE2E79A2 /* DeviceDetailsObservable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceDetailsObservable.swift; sourceTree = "<group>"; };
 		86038AE1032E284E79B32AD6 /* iosApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		860E892CA03455F865F6B189 /* DeviceFormViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceFormViewController.swift; sourceTree = "<group>"; };
+		88912435925203F90FD8B230 /* ObservationBag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservationBag.swift; sourceTree = "<group>"; };
 		89102FACD3C5D312DD4931AD /* OpenSans-Variable.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "OpenSans-Variable.ttf"; sourceTree = "<group>"; };
 		8BA404AA9251B5A81FE46680 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		8E32F3C11E15E25D811147ED /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
@@ -87,6 +96,7 @@
 		C728EE8BAE808A43A1545D26 /* Texts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Texts.swift; sourceTree = "<group>"; };
 		CB0964EB9C6A5F67479E75D9 /* CoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoordinatorTests.swift; sourceTree = "<group>"; };
 		D1A296DCA66B894471E0941C /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		EB5170AC0B0CAC0661626F7C /* SearchFocusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchFocusTests.swift; sourceTree = "<group>"; };
 		F4EBC1DCD0B2A5AB1CAE6F98 /* DeviceDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceDetailsView.swift; sourceTree = "<group>"; };
 		F673041E4C3F3B9DE9F9AF45 /* ToastPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastPresenter.swift; sourceTree = "<group>"; };
 		FE9D8879107C5ACE1803E7C0 /* TextsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextsTests.swift; sourceTree = "<group>"; };
@@ -122,6 +132,8 @@
 				1DBE8C0646832DBFE7511E0D /* DashboardObservable.swift */,
 				812FF487EFD40088DE2E79A2 /* DeviceDetailsObservable.swift */,
 				76D3E4D3A5F8360840570D32 /* DeviceFormObservable.swift */,
+				88912435925203F90FD8B230 /* ObservationBag.swift */,
+				2B592A5429F6FF5AA2756EBD /* StatePublishing.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -158,6 +170,9 @@
 				597F95A0CB029DAFCD6DC351 /* DashboardObservableTests.swift */,
 				A4FC903398C02F6A8761FBAF /* DeviceDetailsObservableTests.swift */,
 				2CD9D9BA315BF5D721C8E425 /* DeviceFormObservableTests.swift */,
+				6A95DD2528C7EF4824BA255E /* LifecycleTests.swift */,
+				63A9F837F9740C6DF807420A /* PerformanceTests.swift */,
+				EB5170AC0B0CAC0661626F7C /* SearchFocusTests.swift */,
 				0E89D59B12D85DFDB1C35F45 /* TestSupport.swift */,
 				FE9D8879107C5ACE1803E7C0 /* TextsTests.swift */,
 				785B35E93E814138A3ED882F /* ViewControllerTests.swift */,
@@ -371,9 +386,11 @@
 				6EEE701F1D9484D43A862BE9 /* DeviceFormViewController.swift in Sources */,
 				BBA31368D89ADA9747D73EAD /* DeviceListCard.swift in Sources */,
 				D32147516E84D6BA9C6B3238 /* DevicesCoordinator.swift in Sources */,
+				E30965C4DD0585BAECB1B304 /* ObservationBag.swift in Sources */,
 				D99A475507E19FCF54B48B6C /* OutlinedField.swift in Sources */,
 				BAD074E953D5F3F6F43A8728 /* SceneDelegate.swift in Sources */,
 				94666FCF8A9DEC93AF186DD1 /* SearchAndFilters.swift in Sources */,
+				3E127972EC535BC9A5B9697C /* StatePublishing.swift in Sources */,
 				F47229F48800911E7538A306 /* StatusMessage.swift in Sources */,
 				E1FF18CBC3C68B8D0B248700 /* Texts.swift in Sources */,
 				A4CA8F289D76C7FC1D3BDAFA /* ToastBanner.swift in Sources */,
@@ -390,6 +407,9 @@
 				E376DCD686F6105E563A4AFA /* DashboardObservableTests.swift in Sources */,
 				93AFDA08E5B68F4A1EB06EED /* DeviceDetailsObservableTests.swift in Sources */,
 				DBB154833B816D6DE275F79E /* DeviceFormObservableTests.swift in Sources */,
+				068CF9F689D81030657777EE /* LifecycleTests.swift in Sources */,
+				78EEF898B637084217ED4EF2 /* PerformanceTests.swift in Sources */,
+				512C3BEC79CD3DF4F93A0CD4 /* SearchFocusTests.swift in Sources */,
 				CE10A6B33A285FE820369D62 /* TestSupport.swift in Sources */,
 				B1700C807154816A86A6E26B /* TextsTests.swift in Sources */,
 				0A6E5C7247A659DED1798632 /* ViewControllerTests.swift in Sources */,
@@ -462,7 +482,8 @@
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 5.0;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
@@ -567,7 +588,8 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};

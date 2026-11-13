@@ -2,11 +2,11 @@ import SwiftUI
 import UIKit
 
 /// Hosts the form and owns its navigation bar: close on the left, "Salvar" on the right.
-final class DeviceFormViewController: UIHostingController<DeviceFormView> {
-    private let observable: DeviceFormObservable
-    private let onClose: () -> Void
+final class DeviceFormViewController: UIHostingController<DeviceFormView>, ObservingScreen {
+    let observable: DeviceFormObservable
+    private let onClose: @MainActor () -> Void
 
-    init(observable: DeviceFormObservable, isEditing: Bool, onClose: @escaping () -> Void) {
+    init(observable: DeviceFormObservable, isEditing: Bool, onClose: @escaping @MainActor () -> Void) {
         self.observable = observable
         self.onClose = onClose
         super.init(rootView: DeviceFormView(observable: observable))
@@ -25,6 +25,10 @@ final class DeviceFormViewController: UIHostingController<DeviceFormView> {
         save.tintColor = UIColor(AppColors.primary)
         save.setTitleTextAttributes([.font: UIFont.app(16, .semibold)], for: .normal)
         navigationItem.rightBarButtonItem = save
+    }
+
+    func stopObserving() {
+        observable.stop()
     }
 
     @available(*, unavailable)

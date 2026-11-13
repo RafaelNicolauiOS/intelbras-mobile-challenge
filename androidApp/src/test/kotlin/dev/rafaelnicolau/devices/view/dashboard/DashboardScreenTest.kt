@@ -1,6 +1,13 @@
 package dev.rafaelnicolau.devices.view.dashboard
 
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.assertIsNotFocused
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -219,5 +226,63 @@ class DashboardScreenTest {
 
         compose.onNodeWithText("Remover dispositivo?").assertDoesNotExist()
         assertEquals(emptyList<String>(), events)
+    }
+
+    // Keyboard: the whole pill opens it, a tap anywhere else closes it (same as iOS).
+
+    private val searchText = hasSetTextAction()
+    private val searchPill = hasClickAction() and hasAnyDescendant(hasSetTextAction())
+
+    @Test
+    fun tappingThePillOutsideTheTextFocusesTheSearch() {
+        show(loaded)
+
+        // Left edge of the pill: the padding before the icon, not the text field itself.
+        compose.onNode(searchPill).performTouchInput { click(Offset(4f, centerY)) }
+
+        compose.onNode(searchText).assertIsFocused()
+    }
+
+    @Test
+    fun tappingAChipClosesTheKeyboardAndStillSelectsTheChip() {
+        show(loaded)
+        compose.onNode(searchText).performClick()
+        compose.onNode(searchText).assertIsFocused()
+
+        compose.onNodeWithText("Câmeras").performClick()
+
+        compose.onNode(searchText).assertIsNotFocused()
+        assertEquals(listOf("filter:CAMERAS"), events)
+    }
+
+    @Test
+    fun tappingADeviceClosesTheKeyboardAndStillOpensIt() {
+        show(loaded)
+        compose.onNode(searchText).performClick()
+
+        compose.onNodeWithText("Câmera Garagem").performClick()
+
+        compose.onNode(searchText).assertIsNotFocused()
+        assertEquals(listOf("open:v1"), events)
+    }
+
+    @Test
+    fun tappingEmptySpaceClosesTheKeyboard() {
+        show(loaded)
+        compose.onNode(searchText).performClick()
+
+        compose.onNodeWithText("Meus dispositivos").performClick()
+
+        compose.onNode(searchText).assertIsNotFocused()
+    }
+
+    @Test
+    fun clearingTheSearchKeepsTheKeyboardOpen() {
+        show(loaded)
+        compose.onNode(searchText).performTextInput("cam")
+
+        compose.onNodeWithContentDescription("Limpar busca").performClick()
+
+        compose.onNode(searchText).assertIsFocused()
     }
 }

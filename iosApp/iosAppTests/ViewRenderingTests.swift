@@ -1,5 +1,5 @@
 @testable import iosApp
-import Shared
+@preconcurrency import Shared
 import SwiftUI
 import XCTest
 
@@ -21,7 +21,7 @@ final class ViewRenderingTests: XCTestCase {
         assertRenders(StatusMessage(message: "Nenhum dispositivo cadastrado."))
         assertRenders(StatusMessage(message: "Erro", onRetry: {}))
         assertRenders(ToastBanner(text: "Copiado"))
-        assertRenders(SearchField(onQueryChange: { _ in }))
+        assertRenders(SearchFieldHost())
         assertRenders(FilterChipsRow(selected: .favorites, onSelected: { _ in }))
         assertRenders(DeviceTypeIcon(type: .alarm))
         assertRenders(AppCard { Text("dentro") })
@@ -76,5 +76,14 @@ final class ViewRenderingTests: XCTestCase {
             viewModel: DeviceDetailsViewModel(deviceId: "x", repository: Fixtures.repository([]), messages: MessageCenter())
         )
         assertRenders(DeviceDetailsView(observable: missing))
+    }
+}
+
+/// `@FocusState` only exists inside a view, so the search field is rendered through one.
+private struct SearchFieldHost: View {
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        SearchField(onQueryChange: { _ in }, isFocused: $isFocused)
     }
 }

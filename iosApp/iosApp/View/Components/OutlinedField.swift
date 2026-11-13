@@ -7,7 +7,8 @@ struct OutlinedField: View {
     let text: String
     let errorText: String?
     var isSecure = false
-    let onChange: (String) -> Void
+    /// Called on the main actor for every edit. `@Sendable` because SwiftUI's `Binding` setter requires it.
+    let onChange: @MainActor @Sendable (String) -> Void
 
     @FocusState private var isFocused: Bool
     @State private var isHidden = true

@@ -23,7 +23,12 @@ sealed interface Device {
         val password: String,
     ) : Device {
         override val type: DeviceType get() = DeviceType.ALARM
-        override val identifier: String get() = DeviceValidator.formatMac(macAddress)
+
+        // Computed once per device instead of on every row drawn: formatting uses a regex.
+        override val identifier: String = DeviceValidator.formatMac(macAddress)
+
+        /** The name as the search compares it; see [searchKey]. Not part of equals. */
+        internal val normalizedName: String = name.searchable()
     }
 
     data class Video(
@@ -36,5 +41,17 @@ sealed interface Device {
     ) : Device {
         override val type: DeviceType get() = DeviceType.VIDEO
         override val identifier: String get() = serial
+
+        internal val normalizedName: String = name.searchable()
     }
 }
+
+/**
+ * The device name lowercased and without accents, computed when the device is created.
+ * Searching then only compares strings, instead of normalizing every name on every keystroke.
+ */
+internal val Device.searchKey: String
+    get() = when (this) {
+        is Device.Alarm -> normalizedName
+        is Device.Video -> normalizedName
+    }

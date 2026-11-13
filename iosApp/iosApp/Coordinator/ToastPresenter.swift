@@ -28,7 +28,7 @@ final class ToastPresenter {
         current = host
         UIAccessibility.post(notification: .announcement, argument: text)
 
-        dismissal = Task { [weak self] in
+        dismissal = Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: 3_000_000_000)
             guard !Task.isCancelled else { return }
             self?.removeCurrent()

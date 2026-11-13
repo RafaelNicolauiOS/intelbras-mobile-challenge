@@ -1,5 +1,5 @@
 @testable import iosApp
-import Shared
+@preconcurrency import Shared
 import SwiftUI
 import XCTest
 

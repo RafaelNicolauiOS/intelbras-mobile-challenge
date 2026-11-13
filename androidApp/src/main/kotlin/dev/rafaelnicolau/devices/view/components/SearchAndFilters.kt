@@ -1,7 +1,9 @@
 package dev.rafaelnicolau.devices.view.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -23,11 +25,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -46,12 +52,22 @@ import dev.rafaelnicolau.devices.view.theme.AppShapes
 @Composable
 fun SearchField(onQueryChange: (String) -> Unit, modifier: Modifier = Modifier) {
     var text by rememberSaveable { mutableStateOf("") }
+    val focusRequester = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
     val update = { value: String ->
         text = value
         onQueryChange(value)
     }
     Surface(
-        modifier = modifier.fillMaxWidth().heightIn(min = 48.dp),
+        // The whole pill is the touch target: tapping the icon or the padding around the
+        // text focuses the field and opens the keyboard, not only the line of text itself.
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                focusRequester.requestFocus()
+                keyboard?.show()
+            },
         shape = AppShapes.Pill,
         color = AppColors.Surface,
         border = BorderStroke(1.dp, AppColors.SurfaceStrong),
@@ -69,7 +85,7 @@ fun SearchField(onQueryChange: (String) -> Unit, modifier: Modifier = Modifier) 
                     textStyle = MaterialTheme.typography.bodyMedium.copy(color = AppColors.Text),
                     cursorBrush = SolidColor(AppColors.Primary),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                 )
             }
             if (text.isNotEmpty()) {

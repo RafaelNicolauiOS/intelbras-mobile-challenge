@@ -1,4 +1,4 @@
-import Shared
+@preconcurrency import Shared
 
 extension UserMessage {
     var text: String {

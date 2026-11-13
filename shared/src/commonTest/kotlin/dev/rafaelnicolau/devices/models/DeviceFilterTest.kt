@@ -43,4 +43,24 @@ class DeviceFilterTest {
         assertEquals(listOf("v2"), ids("ga", DeviceFilter.CAMERAS))
         assertEquals(emptyList(), ids("ga", DeviceFilter.FAVORITES))
     }
+
+    @Test
+    fun normalizationLowercasesAndRemovesPortugueseAccents() {
+        assertEquals("camera portao acucar sao joao", "Câmera Portão AÇÚCAR São João".searchable())
+        assertEquals("aaaaa eeee iiii ooooo uuuu c n", "ÁÀÂÃÄ ÉÈÊË ÍÌÎÏ ÓÒÔÕÖ ÚÙÛÜ Ç Ñ".searchable())
+    }
+
+    @Test
+    fun theSearchKeyFollowsTheNameOfACopy() {
+        val renamed = camera.copy(name = "Câmera Nova")
+
+        assertEquals("camera nova", renamed.searchKey)
+        assertEquals(listOf("v1"), listOf(renamed).filteredBy("nova", DeviceFilter.ALL).map { it.id })
+    }
+
+    @Test
+    fun theSearchKeyIsNotPartOfEquality() {
+        assertEquals(camera, camera.copy())
+        assertEquals(camera.hashCode(), camera.copy().hashCode())
+    }
 }

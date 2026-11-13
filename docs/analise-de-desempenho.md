@@ -27,6 +27,11 @@ Android intermediários, espere tempos de 3 a 10 vezes maiores que os da JVM do 
 No iOS, com 1.000 dispositivos, cada tecla digitada na busca já custa mais que um frame
 (16,6 ms a 60 Hz). Esse trabalho roda no `viewModelScope`, ou seja, no **thread principal**.
 
+Medido depois pelo Observable, do jeito que a UI chama: com `Dispatchers.Main.immediate`, o filtro roda
+**dentro** da chamada `onQueryChange`, antes de a tecla terminar de ser tratada. São 23,9 ms com 1.000
+dispositivos e 145,8 ms com 5.000. O plano para o iOS está em
+[estrategia-desempenho-ios.md](estrategia-desempenho-ios.md).
+
 Alternativas medidas com os mesmos dados:
 
 | 1.000 dispositivos | JVM | iOS |
@@ -37,9 +42,13 @@ Alternativas medidas com os mesmos dados:
 
 ## Achados, por prioridade
 
+> **Atualização:** os itens 1, 4 e 6 já foram aplicados (fases 0, 2 e 3 da
+> [estratégia do iOS](estrategia-desempenho-ios.md#situação)). A tecla na busca passou de 23,9 ms
+> para 0,03 ms no main thread do iOS com 1.000 dispositivos, e o formulário renderiza uma vez por tecla.
+
 ### Alta
 
-**1. Busca e filtro no thread principal, com alocação por caractere** (`shared/.../models/DeviceFilter.kt`)
+**1. Busca e filtro no thread principal, com alocação por caractere** — *aplicado* (`shared/.../models/DeviceFilter.kt`)
 `searchable()` converte cada nome em uma `List<Char>` com caracteres boxed, consulta um
 `Map<Char, Char>` e junta tudo de novo, para todos os dispositivos, a cada emissão. O
 `combine` do `DashboardViewModel` refaz isso sempre que qualquer fonte muda: cada tecla e
@@ -69,7 +78,7 @@ a cada chamada, e isso acontece em todos os `Text` sempre que um `body` é reava
 cache por (tamanho, peso), limpo quando chegar `UIContentSizeCategory.didChangeNotification`.
 (Não medido; é o padrão típico de custo escondido em SwiftUI.)
 
-**4. `identifier` do alarme roda uma regex a cada acesso** (`models/Device.kt`)
+**4. `identifier` do alarme roda uma regex a cada acesso** — *aplicado* (`models/Device.kt`)
 `Device.Alarm.identifier` chama `formatMac` (regex + `chunked` + `joinToString`) toda vez que
 uma linha é desenhada. Medido: 3,1 ms para 1.000 alarmes no iOS, 0,3 ms na JVM. Correção:
 calcular uma vez (`val` inicializado no construtor, ou `by lazy`).
@@ -83,11 +92,12 @@ e redesenha a lista (item 2). Correção: gravar os dois tipos em uma única tra
 Observação de escala: `DELETE ... WHERE id NOT IN (:ids)` passa um parâmetro por id; o SQLite
 empacotado aceita até 32.766, folga grande para o caso de uso.
 
-**6. Formulário iOS publica o estado duas vezes por tecla** (`DeviceFormObservable.swift`)
+**6. Formulário iOS publica o estado duas vezes por tecla** — *aplicado* (`DeviceFormObservable.swift`)
 `apply` publica o estado na hora (de propósito, para o `TextField` não brigar com a digitação) e a
 observação do `StateFlow` publica o mesmo estado logo depois, o que gera dois renders do SwiftUI por
-tecla. Correção: na observação, ignorar o estado se for igual ao atual (`if state != self.state`,
-que usa o `equals` do Kotlin).
+tecla. Medido digitando a ~16 teclas/s: **2,0 publicações por tecla**, com só 0,1 ms de CPU cada, ou seja,
+o custo está no render extra e não no ViewModel. Correção: na observação, ignorar o estado se for igual
+ao atual (`if state != self.state`, que usa o `equals` do Kotlin).
 
 ### Baixa / verificar antes de mexer
 
@@ -106,6 +116,14 @@ builds de debug, mas qualquer medição de desempenho precisa ser feita em build
 - `SharingStarted.WhileSubscribed(5_000)` evita trabalho quando nenhuma tela observa.
 - A busca guarda o texto localmente (Android e iOS), então a digitação não espera o ciclo do ViewModel.
 - Chaves estáveis por `id` nas linhas, o que preserva o estado ao reordenar.
+
+## Isolamento de threads no iOS
+
+Toda atualização de interface já acontece no main thread: os Observables, coordinators e o
+`ToastPresenter` são `@MainActor`, e a medição não encontrou nenhuma publicação de estado fora do main
+thread. O que falta é o compilador garantir isso: o projeto está em Swift 5 com a verificação de
+concorrência desligada, e os callbacks das views não são anotados com `@MainActor`. A
+[estratégia do iOS](estrategia-desempenho-ios.md) cobre os dois pontos.
 
 ## Ordem sugerida
 

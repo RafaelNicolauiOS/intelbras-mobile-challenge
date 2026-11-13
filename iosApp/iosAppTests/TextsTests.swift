@@ -1,8 +1,9 @@
 @testable import iosApp
-import Shared
+@preconcurrency import Shared
 import XCTest
 
 /// The Portuguese copy shown to users.
+@MainActor
 final class TextsTests: XCTestCase {
     func testSuccessMessages() {
         XCTAssertEqual(UserMessageSuccess(kind: .deviceCreated).text, "Dispositivo adicionado")

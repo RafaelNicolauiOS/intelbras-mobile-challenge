@@ -10,7 +10,10 @@ configFiles:
   Release: Config/Config.xcconfig
 settings:
   base:
-    SWIFT_VERSION: "5.0"
+    # Swift 6: data-race safety is checked at compile time. Everything that updates a view or
+    # handles a text field is @MainActor, and the compiler rejects any code that breaks that.
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
     ENABLE_USER_SCRIPT_SANDBOXING: "NO"
 targets:
   iosApp:

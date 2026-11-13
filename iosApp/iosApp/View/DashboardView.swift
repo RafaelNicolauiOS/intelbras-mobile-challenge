@@ -1,16 +1,21 @@
-import Shared
+@preconcurrency import Shared
 import SwiftUI
 
 /// Renders the dashboard state. Navigation is reported through closures and handled by the coordinator.
 struct DashboardView: View {
     @ObservedObject var observable: DashboardObservable
-    let onAddDevice: () -> Void
-    let onOpenDevice: (Device) -> Void
-    let onEditDevice: (Device) -> Void
+    let onAddDevice: @MainActor () -> Void
+    let onOpenDevice: @MainActor (Device) -> Void
+    let onEditDevice: @MainActor (Device) -> Void
 
     // Ids, not devices: the sheet and dialog always show the current data from the state.
     @State private var sheetDeviceId: String?
     @State private var deleteDeviceId: String?
+
+    @FocusState private var isSearchFocused: Bool
+    /// Where the search field is, so a tap can be told apart as inside or outside it.
+    @State private var searchFrame: CGRect = .zero
+    private static let space = "dashboard"
 
     var body: some View {
         let state = observable.state
@@ -25,7 +30,12 @@ struct DashboardView: View {
             // Search and chips stay on screen whenever there is something to search in,
             // including when the current search matches nothing.
             if state.hasAnyDevice {
-                SearchField(onQueryChange: observable.onQueryChange)
+                SearchField(onQueryChange: observable.onQueryChange, isFocused: $isSearchFocused)
+                    .background(
+                        GeometryReader { proxy in
+                            Color.clear.preference(key: SearchFrameKey.self, value: proxy.frame(in: .named(Self.space)))
+                        }
+                    )
                     .padding(.top, 16)
                 FilterChipsRow(selected: state.filter, onSelected: observable.onFilterSelected)
                     .padding(.top, 12)
@@ -39,6 +49,21 @@ struct DashboardView: View {
         .foregroundStyle(AppColors.text)
         .padding(.horizontal, 16)
         .background(AppColors.background)
+        .coordinateSpace(name: Self.space)
+        .onPreferenceChange(SearchFrameKey.self) { frame in
+            // SwiftUI calls this on the main thread, but the closure is typed as @Sendable.
+            Task { @MainActor in searchFrame = frame }
+        }
+        // A tap anywhere outside the search field closes the keyboard. Simultaneous, so
+        // buttons, chips and rows still get their tap; scrolling is not a tap and keeps it open.
+        .simultaneousGesture(
+            SpatialTapGesture(coordinateSpace: .named(Self.space)).onEnded { tap in
+                // Until the field's frame is known (right after it appears) no tap can be
+                // classified, so none closes the keyboard; otherwise it could never open.
+                guard searchFrame != .zero, !searchFrame.contains(tap.location) else { return }
+                isSearchFocused = false
+            }
+        )
         .sheet(isPresented: isPresenting($sheetDeviceId)) {
             if let device = device(withId: sheetDeviceId) {
                 DeviceActionsSheet(
@@ -127,5 +152,18 @@ struct DashboardView: View {
 
     private func isPresenting(_ id: Binding<String?>) -> Binding<Bool> {
         Binding(get: { id.wrappedValue != nil }, set: { if !$0 { id.wrappedValue = nil } })
+    }
+}
+
+/// Carries the search field's frame up to the dashboard.
+struct SearchFrameKey: PreferenceKey {
+    static let defaultValue: CGRect = .zero
+
+    /// SwiftUI also calls this for siblings that never set the key, passing `defaultValue`.
+    /// Only a real frame may replace the value; otherwise those siblings erase it, every tap
+    /// counts as "outside" and the keyboard closes the moment it opens.
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        let next = nextValue()
+        if next != defaultValue { value = next }
     }
 }
