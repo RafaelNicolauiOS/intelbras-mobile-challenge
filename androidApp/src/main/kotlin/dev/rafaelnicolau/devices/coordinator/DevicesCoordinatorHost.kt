@@ -1,16 +1,22 @@
 package dev.rafaelnicolau.devices.coordinator
 
+import android.content.ClipData
+import android.os.Build
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -23,6 +29,9 @@ import dev.rafaelnicolau.devices.view.dashboard.DashboardScreen
 import dev.rafaelnicolau.devices.view.details.DeviceDetailsScreen
 import dev.rafaelnicolau.devices.view.form.DeviceFormActions
 import dev.rafaelnicolau.devices.view.form.DeviceFormScreen
+import dev.rafaelnicolau.devices.view.theme.AppColors
+import dev.rafaelnicolau.devices.view.theme.AppShapes
+import kotlinx.coroutines.launch
 
 /** Builds each screen with its ViewModel and wires the screen's callbacks to the coordinator. */
 @Composable
@@ -42,7 +51,14 @@ fun DevicesCoordinatorHost(coordinator: DevicesCoordinator = rememberDevicesCoor
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding(),
-        )
+        ) { data ->
+            Snackbar(
+                snackbarData = data,
+                shape = AppShapes.Field,
+                containerColor = AppColors.SurfaceDark,
+                contentColor = AppColors.TextOnDark,
+            )
+        }
     }
 }
 
@@ -72,9 +88,17 @@ private fun DevicesNavHost(coordinator: DevicesCoordinator) {
             val deviceId = requireNotNull(entry.arguments?.getString(Route.ARG_DEVICE_ID))
             val viewModel = viewModel { AppContainer.deviceDetailsViewModel(deviceId) }
             val device by viewModel.device.collectAsStateWithLifecycle()
+            val clipboard = LocalClipboard.current
+            val scope = rememberCoroutineScope()
             DeviceDetailsScreen(
                 device = device,
-                onEdit = { coordinator.showEditDevice(deviceId) },
+                onCopy = { value ->
+                    scope.launch {
+                        clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("device", value)))
+                        // Android 13+ shows its own "copied" preview; a second message would overlap it.
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) viewModel.onCopied()
+                    }
+                },
                 onBack = coordinator::back,
             )
         }
