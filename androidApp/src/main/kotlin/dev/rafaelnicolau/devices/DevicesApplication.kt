@@ -9,7 +9,12 @@ class DevicesApplication : Application() {
         super.onCreate()
         initializeApp(
             context = this,
-            config = ApiConfig(baseUrl = BuildConfig.API_BASE_URL, token = BuildConfig.API_TOKEN),
+            config = ApiConfig(
+                baseUrl = BuildConfig.API_BASE_URL,
+                token = BuildConfig.API_TOKEN,
+                // Requests and responses go to Logcat (filter by "[HTTP]") in debug builds only.
+                logRequests = BuildConfig.DEBUG,
+            ),
         )
     }
 }

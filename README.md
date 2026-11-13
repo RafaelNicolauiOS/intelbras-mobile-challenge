@@ -77,6 +77,15 @@ O projeto Xcode é gerado a partir de [iosApp/project.yml](iosApp/project.yml) c
 
 Roda os testes do módulo compartilhado na JVM (alvo Android) e no simulador iOS.
 
+### 5. Ver as requisições no console
+
+Nos builds de **debug**, cada requisição e resposta da API é impressa com método, URL, cabeçalhos e corpo JSON, sempre com o prefixo `[HTTP]`:
+
+- **iOS:** aparece na área de debug do Xcode; digite `[HTTP]` no filtro do console.
+- **Android:** aparece no Logcat; filtre por `[HTTP]`.
+
+O token nunca é impresso (o cabeçalho `Authorization` sai como `***`). Os corpos incluem as senhas dos dispositivos, por isso o log fica desligado nos builds de release. Para ligar ou desligar, altere `logRequests` no `ApiConfig` (em `AppDelegate.swift` e `DevicesApplication.kt`).
+
 ## Arquitetura
 
 **MVVM + Coordinator**, com o banco local como **fonte única de verdade**.
@@ -233,12 +242,12 @@ Os testes ficam no módulo `shared` e cobrem as regras de negócio:
 |---|---|
 | `DeviceValidatorTest` | Campos obrigatórios, formato do MAC, senha do alarme com 4 ou 6 dígitos |
 | `DeviceFilterTest` | Chips e busca por nome, ignorando maiúsculas e acentos |
-| `DeviceApiTest` | Leitura da resposta, token no cabeçalho, tradução de cada tipo de erro |
+| `DeviceApiTest` | Leitura da resposta, token no cabeçalho, tradução de cada tipo de erro, log de requisições sem o token |
 | `DefaultDeviceRepositoryTest` | Sincronização com banco real: favoritos preservados, remoção no servidor, falha parcial, criar e remover |
 | `DashboardViewModelTest` | Estados de carregamento, erro com dados em cache, filtros, favoritar, remover |
 | `DeviceFormViewModelTest` | Validação, criação, edição pré-preenchida, conflito 409 |
 
-Hoje são 44 testes no alvo iOS e 37 na JVM. A diferença são os testes do repositório, que usam o Room em memória e só rodam no simulador iOS.
+Hoje são 46 testes no alvo iOS e 39 na JVM. A diferença são os testes do repositório, que usam o Room em memória e só rodam no simulador iOS.
 
 O [workflow de CI](.github/workflows/ci.yml) roda a cada push e pull request:
 

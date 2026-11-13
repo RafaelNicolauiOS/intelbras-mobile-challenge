@@ -111,4 +111,32 @@ class DeviceApiTest {
 
         assertEquals(Outcome.Failure(DeviceError.UNKNOWN), apiCall { api.getVideoDevices() })
     }
+
+    @Test
+    fun requestLoggingPrintsTheJsonBodiesButNeverTheToken() = runTest {
+        val lines = mutableListOf<String>()
+        val logging = ApiConfig(baseUrl = "http://api.test:1234", token = "secret-token", logRequests = true)
+        val engine = MockEngine {
+            json("""{"id":"v1","name":"Garagem","serial":"S1","username":"admin","password":"x"}""")
+        }
+        val api = DeviceApi(createHttpClient(logging, engine, log = { lines += it }))
+
+        api.createVideoDevice(VideoDeviceBody("Garagem", "S1", "admin", "x"))
+
+        val output = lines.joinToString("\n")
+        assertTrue("http://api.test:1234/video-devices" in output && "POST" in output, output)
+        assertTrue("\"serial\":\"S1\"" in output, "request body is logged")
+        assertTrue("\"id\":\"v1\"" in output, "response body is logged")
+        assertTrue("secret-token" !in output, "the token must not be logged")
+    }
+
+    @Test
+    fun nothingIsLoggedUnlessEnabled() = runTest {
+        val lines = mutableListOf<String>()
+        val engine = MockEngine { json("""{"count":0,"data":[]}""") }
+
+        DeviceApi(createHttpClient(config, engine, log = { lines += it })).getVideoDevices()
+
+        assertTrue(lines.isEmpty())
+    }
 }

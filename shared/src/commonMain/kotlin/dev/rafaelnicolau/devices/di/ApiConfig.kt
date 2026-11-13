@@ -7,4 +7,10 @@ package dev.rafaelnicolau.devices.di
 data class ApiConfig(
     val baseUrl: String,
     val token: String,
+    /**
+     * Prints every request and response (method, URL, headers and JSON body) to the
+     * console: Xcode's debug area on iOS, Logcat on Android. Meant for debug builds only,
+     * since bodies include device passwords. The API token is never printed.
+     */
+    val logRequests: Boolean = false,
 )
