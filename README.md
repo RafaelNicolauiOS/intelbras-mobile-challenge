@@ -71,11 +71,25 @@ O projeto Xcode é gerado a partir de [iosApp/project.yml](iosApp/project.yml) c
 
 ### 4. Testes
 
+São três suítes. Os detalhes de cada uma estão em [Testes e CI](#testes-e-ci).
+
+Módulo compartilhado, na JVM (alvo Android) e no simulador iOS:
+
 ```bash
 ./gradlew :shared:allTests
 ```
 
-Roda os testes do módulo compartilhado na JVM (alvo Android) e no simulador iOS.
+App Android (telas, componentes e navegação, renderizados na JVM com Robolectric; não precisa de emulador):
+
+```bash
+./gradlew :androidApp:testDebugUnitTest
+```
+
+App iOS (camada Swift): no Xcode, `Product > Test` (⌘U) no esquema `iosApp`. Pela linha de comando, troque o nome pelo de um simulador instalado:
+
+```bash
+xcodebuild test -project iosApp/iosApp.xcodeproj -scheme iosApp -destination 'platform=iOS Simulator,name=iPhone 17'
+```
 
 ### 5. Ver as requisições no console
 
@@ -152,7 +166,9 @@ Como validação, filtros, busca, sincronização e favoritos estão no `shared`
 | Interop Kotlin → Swift | SKIE | `Flow` vira `AsyncSequence`, `sealed` e `enum` viram enums Swift exaustivos |
 | UI Android | Jetpack Compose (Material 3) + Navigation Compose | Exigido no case |
 | UI iOS | SwiftUI hospedado em UIKit (`UINavigationController`) | SwiftUI exigido no case; UIKit dá aos coordinators o controle da navegação |
-| Testes | kotlin.test, kotlinx-coroutines-test, Ktor MockEngine, Room em memória | Rodam no código compartilhado |
+| Testes do `shared` | kotlin.test, kotlinx-coroutines-test, Ktor MockEngine, Room em memória | Rodam na JVM e no simulador iOS |
+| Testes do app Android | JUnit 4, Robolectric, Compose UI Test, navigation-testing | Testam telas Compose na JVM, sem emulador |
+| Testes do app iOS | XCTest (target `iosAppTests`, hospedado pelo app) | Usa o mesmo framework Kotlin do app, sem duplicar o runtime |
 | CI | GitHub Actions | Lint, testes e build das duas plataformas |
 
 ## Como os favoritos sobrevivem à sincronização
@@ -183,7 +199,7 @@ A sincronização acontece em uma transação por tipo:
 2. Para cada tipo que respondeu com sucesso: grava o que veio, remove o que o servidor não tem mais e limpa favoritos órfãos.
 3. Se um dos dois endpoints falhar, **só o outro tipo é atualizado**; o tipo que falhou mantém os últimos dados em vez de ser apagado.
 
-Isso está coberto por testes que usam um banco Room real em memória (`DefaultDeviceRepositoryTest`).
+Isso está coberto por testes que usam um banco Room real em memória (`DefaultDeviceRepositoryTest` e `DeviceDaoTest`).
 
 ## Decisões técnicas e trade-offs
 
@@ -236,23 +252,75 @@ Diferenças em relação ao protótipo:
 
 ## Testes e CI
 
-Os testes ficam no módulo `shared` e cobrem as regras de negócio:
+Há testes nas três camadas: regras de negócio no `shared` e a camada de apresentação de cada app.
+
+| Suíte | Onde roda | Testes |
+|---|---|---:|
+| `shared` (commonTest) | JVM | 98 |
+| `shared` (commonTest + iosTest) | Simulador iOS | 119 |
+| `androidApp` | JVM, com Robolectric | 64 |
+| `iosAppTests` | Simulador iOS | 47 |
+
+O alvo iOS do `shared` tem mais testes porque inclui os de repositório e DAO, que usam um Room real em memória e só rodam no simulador iOS (no Android, o Room exige um `Context`).
+
+### Módulo `shared`
 
 | Arquivo | O que verifica |
 |---|---|
 | `DeviceValidatorTest` | Campos obrigatórios, formato do MAC, senha do alarme com 4 ou 6 dígitos |
 | `DeviceFilterTest` | Chips e busca por nome, ignorando maiúsculas e acentos |
-| `DeviceApiTest` | Leitura da resposta, token no cabeçalho, tradução de cada tipo de erro, log de requisições sem o token |
-| `DefaultDeviceRepositoryTest` | Sincronização com banco real: favoritos preservados, remoção no servidor, falha parcial, criar e remover |
-| `DashboardViewModelTest` | Estados de carregamento, erro com dados em cache, filtros, favoritar, remover |
-| `DeviceFormViewModelTest` | Validação, criação, edição pré-preenchida, conflito 409 |
+| `DeviceTest` | Tipo e identificador de cada dispositivo, `hasErrors` do formulário |
+| `DeviceApiTest` | Método e URL de cada endpoint, token no cabeçalho, corpo JSON, tradução de erros, log sem o token |
+| `ApiCallTest` | Tempo esgotado (cliente e 408/504), status desconhecidos, exceções inesperadas, cancelamento repassado |
+| `MappersTest` | Conversão entre DTO, entidade do banco, modelo e corpo da requisição |
+| `InMemoryDeviceRepositoryTest` | O repositório falso usado nos testes se comporta como o real |
+| `DefaultDeviceRepositoryTest` | Sincronização com banco real: favoritos preservados, remoção no servidor, falha parcial, criar, editar, remover, ordenação |
+| `DeviceDaoTest` | SQL do DAO: upsert, substituição por tipo, favoritos órfãos, remoção com o favorito |
+| `DashboardViewModelTest` | Carregamento, refresh, erro com dados em cache, busca, filtros, contagem, favoritar, remover |
+| `DeviceFormViewModelTest` | Validação dos dois tipos, limpeza de erros, criação, edição pré-preenchida, envio duplo, conflito 409, nova tentativa |
+| `DeviceDetailsViewModelTest` | Dispositivo exibido, atualizado e removido; aviso de cópia; `clear()` encerra o escopo |
+| `MessageCenterTest` | Cada aviso chega uma única vez, em ordem, mesmo se postado antes de alguém escutar |
 
-Hoje são 46 testes no alvo iOS e 39 na JVM. A diferença são os testes do repositório, que usam o Room em memória e só rodam no simulador iOS.
+### App Android
+
+Os testes ficam em `androidApp/src/test` e renderizam as telas Compose de verdade na JVM, com Robolectric, sem emulador.
+
+| Arquivo | O que verifica |
+|---|---|
+| `DashboardScreenTest` | Lista, contagem, carregamento, estados vazio e de erro, busca, chips, bottom sheet de ações e confirmação de remoção |
+| `DeviceFormScreenTest` | Modo adicionar e editar, campos por tipo, erros por campo, botão "Salvar" desabilitado, mostrar e ocultar senha |
+| `DeviceDetailsScreenTest` | Dados de cada tipo, cópia do MAC e do número de série, senha nunca exibida, dispositivo não encontrado |
+| `ComponentsTest` | Componentes isolados: busca, chips, card da lista, bottom sheet, diálogo de remoção, mensagem de status |
+| `DevicesCoordinatorTest` | Navegação para detalhes, adicionar, editar e voltar, em um `NavHost` real |
+| `RouteTest`, `TextsTest`, `AppThemeTest` | Rotas, textos em português, paleta, formas e tipografia do tema |
+| `DevicesApplicationTest` | A inicialização do app monta o repositório real |
+
+### App iOS
+
+O target `iosAppTests` é hospedado pelo app e usa o framework `Shared` já embutido nele. Os ViewModels são criados com o `InMemoryDeviceRepository`, então os testes não dependem da API.
+
+| Arquivo | O que verifica |
+|---|---|
+| `DashboardObservableTests`, `DeviceFormObservableTests`, `DeviceDetailsObservableTests` | As pontes republicam o estado do ViewModel Kotlin e repassam as ações; o formulário publica cada tecla na hora |
+| `CoordinatorTests` | `DevicesCoordinator` empilha a tela certa, `AppCoordinator` configura a janela, `ToastPresenter` mostra um aviso por vez e o esconde sozinho |
+| `ViewControllerTests` | Títulos, botões "Fechar" e "Salvar", barra de navegação oculta no dashboard |
+| `TextsTests`, `AppThemeTests` | Textos em português, ícones SF Symbols existentes, cores e fonte Open Sans |
+| `ViewRenderingTests` | Cada view e componente SwiftUI renderiza em todos os estados |
+
+O SwiftUI não tem API pública para inspecionar a árvore de views. Por isso as views têm testes de renderização, e o comportamento por trás delas é testado nas pontes e no `shared`. A cobertura do código Swift do app é de cerca de 93%.
+
+### CI
 
 O [workflow de CI](.github/workflows/ci.yml) roda a cada push e pull request:
 
-- **Android (Ubuntu):** lint, testes do `shared` na JVM e build do APK de debug.
-- **iOS (macOS):** testes do `shared` no simulador e build do app.
+- **Android (Ubuntu):** lint, testes do `shared` na JVM, testes do app Android e build do APK de debug.
+- **iOS (macOS):** testes do `shared` no simulador, build do app e testes Swift no simulador de iPhone mais recente disponível.
+
+Os relatórios de teste (incluindo o `.xcresult` do iOS) ficam disponíveis como artefatos de cada execução.
+
+### Desempenho
+
+Há uma análise de desempenho, com medições da busca do dashboard na JVM e no Kotlin/Native, em [docs/analise-de-desempenho.md](docs/analise-de-desempenho.md).
 
 ## O que ficou pendente e o que eu melhoraria
 
@@ -266,7 +334,8 @@ O [workflow de CI](.github/workflows/ci.yml) roda a cada push e pull request:
 
 - **Fila de operações pendentes.** Permitir criar, editar e remover sem conexão: a escrita passaria a ser local primeiro, com um estado de sincronização por dispositivo, e uma fila enviaria as operações quando a rede voltasse. Criações offline usariam um id temporário, trocado pelo id do servidor na mesma transação que migra o favorito.
 - **Proteger as senhas dos dispositivos.** Hoje ficam em texto puro no banco local. Usaria Keystore/Keychain ou um banco criptografado.
-- **Testes de UI** (Compose UI Test e XCUITest) para os fluxos principais, e teste de integração do banco também no Android.
+- **Testes de ponta a ponta** em emulador e simulador (testes instrumentados e XCUITest) para os fluxos principais, e teste de integração do banco também no Android.
+- **Aplicar as melhorias de desempenho** levantadas na [análise](docs/analise-de-desempenho.md), começando pela busca e pela virtualização das listas.
 - **Ferramentas de qualidade**: ktlint e detekt no Kotlin, SwiftLint no Swift, rodando no CI.
 - **Koin** no lugar da composição manual.
 - **Textos em arquivos de recursos** (`strings.xml` / `Localizable.strings`); hoje estão no código de cada app.
