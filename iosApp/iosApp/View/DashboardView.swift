@@ -16,11 +16,11 @@ struct DashboardView: View {
         let state = observable.state
         VStack(alignment: .leading, spacing: 0) {
             Text("Meus dispositivos")
-                .font(.system(size: 24, weight: .semibold))
+                .font(.app(24, .semibold))
                 .accessibilityAddTraits(.isHeader)
                 .padding(.top, 24)
             Text(deviceCount(Int(state.totalCount)))
-                .font(.system(size: 14))
+                .font(.app(14))
 
             // Search and chips stay on screen whenever there is something to search in,
             // including when the current search matches nothing.
@@ -80,7 +80,7 @@ struct DashboardView: View {
                     // Cached devices stay visible; the failed sync is only a notice.
                     if let error = state.error {
                         Text("\(error.message) Mostrando os últimos dados salvos.")
-                            .font(.system(size: 14))
+                            .font(.app(14))
                             .foregroundStyle(AppColors.error)
                     }
                     if state.devices.isEmpty {
@@ -104,7 +104,7 @@ struct DashboardView: View {
             HStack(spacing: 12) {
                 Image(systemName: "plus")
                 Text("Adicionar")
-                    .font(.system(size: 16))
+                    .font(.app(16))
             }
             .foregroundStyle(AppColors.text)
             .frame(maxWidth: .infinity, minHeight: 48)

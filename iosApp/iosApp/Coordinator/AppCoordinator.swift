@@ -26,7 +26,10 @@ final class AppCoordinator: Coordinator {
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor(AppColors.background)
         appearance.shadowColor = .clear
-        appearance.titleTextAttributes = [.foregroundColor: UIColor(AppColors.text)]
+        appearance.titleTextAttributes = [
+            .foregroundColor: UIColor(AppColors.text),
+            .font: UIFont.app(17, .semibold),
+        ]
         navigationController.navigationBar.standardAppearance = appearance
         navigationController.navigationBar.scrollEdgeAppearance = appearance
         navigationController.navigationBar.tintColor = UIColor(AppColors.text)

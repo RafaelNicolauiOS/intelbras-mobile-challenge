@@ -7,7 +7,7 @@ struct DeviceTypeIcon: View {
 
     var body: some View {
         Image(systemName: type.iconName)
-            .font(.system(size: 16))
+            .font(.app(16))
             .foregroundStyle(AppColors.text)
             .frame(width: 40, height: 40)
             .background(AppColors.background, in: RoundedRectangle(cornerRadius: 8))
@@ -43,9 +43,9 @@ struct DeviceListCard: View {
             DeviceTypeIcon(type: device.type)
             VStack(alignment: .leading, spacing: 2) {
                 Text(device.name)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.app(16, .semibold))
                 Text(device.identifier)
-                    .font(.system(size: 14))
+                    .font(.app(14))
             }
             .foregroundStyle(AppColors.text)
             .lineLimit(1)

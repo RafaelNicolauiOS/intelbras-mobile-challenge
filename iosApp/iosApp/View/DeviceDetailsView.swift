@@ -11,7 +11,7 @@ struct DeviceDetailsView: View {
                     HStack(spacing: 12) {
                         DeviceTypeIcon(type: device.type)
                         Text(device.name)
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.app(16, .semibold))
                     }
                     .padding(16)
                 }
@@ -48,12 +48,12 @@ struct DeviceDetailsView: View {
                     observable.copy(value)
                 } label: {
                     Image(systemName: "doc.on.doc")
-                        .font(.system(size: 14))
+                        .font(.app(14))
                         .frame(width: 32, height: 32)
                 }
                 .accessibilityLabel("Copiar \(label)")
             }
         }
-        .font(.system(size: 16))
+        .font(.app(16))
     }
 }

@@ -23,7 +23,7 @@ final class DeviceFormViewController: UIHostingController<DeviceFormView> {
         // Plain style: the prototype shows "Salvar" as green text, not as a filled button.
         let save = UIBarButtonItem(title: "Salvar", style: .plain, target: self, action: #selector(saveTapped))
         save.tintColor = UIColor(AppColors.primary)
-        save.setTitleTextAttributes([.font: UIFont.systemFont(ofSize: 16, weight: .semibold)], for: .normal)
+        save.setTitleTextAttributes([.font: UIFont.app(16, .semibold)], for: .normal)
         navigationItem.rightBarButtonItem = save
     }
 

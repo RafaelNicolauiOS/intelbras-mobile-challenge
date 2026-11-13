@@ -202,13 +202,14 @@ Isso está coberto por testes que usam um banco Room real em memória (`DefaultD
 
 As telas seguem o protótipo e o guia de estilo do Figma nas duas plataformas: paleta, hierarquia de texto, card único com a lista de dispositivos, busca em formato de pílula, chips, botão "Adicionar" na base, bottom sheet de ações, campos com contorno e Snackbar escuro. As cores do guia estão centralizadas em `AppColors` (um arquivo por plataforma, com os mesmos nomes do guia).
 
+A tipografia é a **Open Sans** do guia, nos pesos Regular (400) e SemiBold (600). Um único arquivo de fonte variável é embutido em cada app; a licença (SIL Open Font License) está em [licenses/OpenSans-OFL.txt](licenses/OpenSans-OFL.txt).
+
 O protótipo define um único tema claro, então o app não acompanha o modo escuro do sistema.
 
 Diferenças em relação ao protótipo:
 
 | No protótipo | No app | Motivo |
 |---|---|---|
-| Fonte Open Sans | Fonte do sistema (Roboto / SF) | Ainda não embuti os arquivos da fonte; pesos e tamanhos seguem o guia |
 | Ícones próprios do guia | Material Icons no Android, SF Symbols no iOS | Ícones equivalentes da plataforma, sem exportar os SVGs |
 | "Ativo" abaixo do nome, em Informações | Não exibido | A API não informa status do dispositivo; mostrar um valor fixo seria inventar dado |
 | Lista sem indicação de favorito | Igual ao protótipo | O favorito aparece pelo chip "Favoritos" e pelo texto da ação no bottom sheet |
@@ -248,7 +249,7 @@ O [workflow de CI](.github/workflows/ci.yml) roda a cada push e pull request:
 
 **Pendente em relação ao case**
 
-- **Fonte Open Sans e ícones do guia de estilo.** O layout e as cores seguem o protótipo, mas a fonte é a do sistema e os ícones são os equivalentes de cada plataforma.
+- **Ícones do guia de estilo.** O layout, as cores e a fonte seguem o protótipo, mas os ícones são os equivalentes de cada plataforma (Material Icons e SF Symbols), não os SVGs do guia.
 - **Validação em iOS 16.** O deployment target é 16.0, mas só testei em simuladores mais novos; não tinha o runtime 16 instalado.
 - **Offline no iOS não foi testado manualmente**, só no Android (o simulador usa a rede do Mac). A regra é a mesma e está coberta por testes.
 

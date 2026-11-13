@@ -35,6 +35,10 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>OpenSans-Variable.ttf</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

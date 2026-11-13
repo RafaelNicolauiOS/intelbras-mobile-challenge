@@ -6,10 +6,15 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.rafaelnicolau.devices.R
 
 /** The palette from the style guide, with the names it uses there. */
 object AppColors {
@@ -53,15 +58,34 @@ private val colorScheme = lightColorScheme(
     inverseOnSurface = AppColors.TextOnDark,
 )
 
-// The style guide uses two weights only: Regular (400) and SemiBold (600).
+// The style guide uses a single family, Open Sans, in two weights: Regular (400) and SemiBold (600).
+// One variable font file provides both.
+@OptIn(ExperimentalTextApi::class)
+private val OpenSans = FontFamily(
+    Font(R.font.open_sans, FontWeight.Normal, variationSettings = FontVariation.Settings(FontVariation.weight(400))),
+    Font(R.font.open_sans, FontWeight.SemiBold, variationSettings = FontVariation.Settings(FontVariation.weight(600))),
+)
+
+private fun style(size: Int, lineHeight: Int, weight: FontWeight = FontWeight.Normal) =
+    TextStyle(fontFamily = OpenSans, fontSize = size.sp, lineHeight = lineHeight.sp, fontWeight = weight)
+
+// Every slot is set, so Material components that pick a default style also use Open Sans.
 private val typography = Typography(
-    headlineMedium = TextStyle(fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.SemiBold),
-    titleLarge = TextStyle(fontSize = 20.sp, lineHeight = 28.sp, fontWeight = FontWeight.SemiBold),
-    titleMedium = TextStyle(fontSize = 16.sp, lineHeight = 24.sp, fontWeight = FontWeight.SemiBold),
-    bodyLarge = TextStyle(fontSize = 16.sp, lineHeight = 24.sp, fontWeight = FontWeight.Normal),
-    bodyMedium = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Normal),
-    labelLarge = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold),
-    bodySmall = TextStyle(fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.Normal),
+    displayLarge = style(57, 64),
+    displayMedium = style(45, 52),
+    displaySmall = style(36, 44),
+    headlineLarge = style(32, 40, FontWeight.SemiBold),
+    headlineMedium = style(24, 32, FontWeight.SemiBold),
+    headlineSmall = style(22, 28, FontWeight.SemiBold),
+    titleLarge = style(20, 28, FontWeight.SemiBold),
+    titleMedium = style(16, 24, FontWeight.SemiBold),
+    titleSmall = style(14, 20, FontWeight.SemiBold),
+    bodyLarge = style(16, 24),
+    bodyMedium = style(14, 20),
+    bodySmall = style(12, 16),
+    labelLarge = style(14, 20, FontWeight.SemiBold),
+    labelMedium = style(12, 16, FontWeight.SemiBold),
+    labelSmall = style(11, 16, FontWeight.SemiBold),
 )
 
 /** The prototype defines a single, light theme, so the app does not follow the system dark mode. */

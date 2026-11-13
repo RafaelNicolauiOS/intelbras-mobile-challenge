@@ -26,6 +26,7 @@
 		BC232D72404AE3CA57D644C7 /* DeviceActionsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EC27C5759C783FC8ADED981 /* DeviceActionsSheet.swift */; };
 		D32147516E84D6BA9C6B3238 /* DevicesCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B6202D3E7111A082B83196B /* DevicesCoordinator.swift */; };
 		D99A475507E19FCF54B48B6C /* OutlinedField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31CF4EBFDFF1E412CE786B9F /* OutlinedField.swift */; };
+		DF607563DCB65E45E1D356D9 /* OpenSans-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 89102FACD3C5D312DD4931AD /* OpenSans-Variable.ttf */; };
 		E1FF18CBC3C68B8D0B248700 /* Texts.swift in Sources */ = {isa = PBXBuildFile; fileRef = C728EE8BAE808A43A1545D26 /* Texts.swift */; };
 		E7D0848D0C7843277E4B41E6 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B34852826287D430203BC836 /* DashboardView.swift */; };
 		EB1DEEB8ED2984D2DE32D1B2 /* DashboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A325793FEB7515E737393CD /* DashboardViewController.swift */; };
@@ -48,6 +49,7 @@
 		812FF487EFD40088DE2E79A2 /* DeviceDetailsObservable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceDetailsObservable.swift; sourceTree = "<group>"; };
 		86038AE1032E284E79B32AD6 /* iosApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		860E892CA03455F865F6B189 /* DeviceFormViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceFormViewController.swift; sourceTree = "<group>"; };
+		89102FACD3C5D312DD4931AD /* OpenSans-Variable.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "OpenSans-Variable.ttf"; sourceTree = "<group>"; };
 		8BA404AA9251B5A81FE46680 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		8E32F3C11E15E25D811147ED /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
 		999CF9AB76D911B2907ED066 /* StatusMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusMessage.swift; sourceTree = "<group>"; };
@@ -68,12 +70,21 @@
 				C117AD187833E2513BD2F553 /* Info.plist */,
 				5DBDE60058A6672895D37E2A /* App */,
 				A0978EA965968905A44D4A2C /* Coordinator */,
+				1EEC3D4E9285A39087C3ADA0 /* Resources */,
 				4795698A257B423F254DDC14 /* Theme */,
 				E075D255BDE147607D8B489E /* View */,
 				75DC450B44D608D8C1654BE0 /* ViewController */,
 				1FE177A99D3A5753499AA50A /* ViewModel */,
 			);
 			path = iosApp;
+			sourceTree = "<group>";
+		};
+		1EEC3D4E9285A39087C3ADA0 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				8E9AE3FEB1BE8402757C808F /* Fonts */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		1FE177A99D3A5753499AA50A /* ViewModel */ = {
@@ -136,6 +147,14 @@
 			path = ViewController;
 			sourceTree = "<group>";
 		};
+		8E9AE3FEB1BE8402757C808F /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				89102FACD3C5D312DD4931AD /* OpenSans-Variable.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
 		94C98B8B3A2BFC1966447269 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -183,6 +202,7 @@
 			buildPhases = (
 				B6D1748BF05B24DE1D91D4DB /* Build Kotlin shared framework */,
 				297B59D9CE634556D6007C40 /* Sources */,
+				1623B02D10928C8101C1F806 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -227,6 +247,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1623B02D10928C8101C1F806 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DF607563DCB65E45E1D356D9 /* OpenSans-Variable.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
 		B6D1748BF05B24DE1D91D4DB /* Build Kotlin shared framework */ = {

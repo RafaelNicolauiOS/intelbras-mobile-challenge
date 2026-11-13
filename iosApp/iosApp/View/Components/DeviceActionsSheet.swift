@@ -14,7 +14,7 @@ struct DeviceActionsSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(device.type.sheetTitle)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.app(16, .semibold))
                 .foregroundStyle(AppColors.text)
                 .frame(maxWidth: .infinity)
                 .padding(.top, 28)
@@ -51,7 +51,7 @@ struct DeviceActionsSheet: View {
                 Image(systemName: icon)
                     .frame(width: 24)
                 Text(title)
-                    .font(.system(size: 16))
+                    .font(.app(16))
             }
             .foregroundStyle(color)
             .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)

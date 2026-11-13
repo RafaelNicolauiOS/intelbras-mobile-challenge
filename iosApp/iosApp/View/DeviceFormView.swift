@@ -16,7 +16,7 @@ struct DeviceFormView: View {
                         // The type decides which API resource is used, so it is fixed once the device exists.
                         if !state.isEditing {
                             Text("Tipo de dispositivo")
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(.app(14, .semibold))
                                 .foregroundStyle(AppColors.text)
                             typeSelector(selected: state.type)
                         }
@@ -55,7 +55,7 @@ struct DeviceFormView: View {
                     observable.onTypeChange(type)
                 } label: {
                     Text(type.label)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.app(14, .semibold))
                         .foregroundStyle(isSelected ? AppColors.primary : AppColors.text)
                         .frame(maxWidth: .infinity, minHeight: 44)
                         .background(

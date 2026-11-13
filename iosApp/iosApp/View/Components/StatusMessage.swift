@@ -8,11 +8,12 @@ struct StatusMessage: View {
     var body: some View {
         VStack(spacing: 8) {
             Text(message)
+                .font(.app(16))
                 .foregroundStyle(AppColors.text)
                 .multilineTextAlignment(.center)
             if let onRetry {
                 Button("Tentar novamente", action: onRetry)
-                    .fontWeight(.semibold)
+                    .font(.app(14, .semibold))
                     .foregroundStyle(AppColors.primary)
                     .frame(minHeight: 44)
             }

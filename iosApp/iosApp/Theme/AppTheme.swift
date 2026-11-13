@@ -1,3 +1,4 @@
+import CoreText
 import SwiftUI
 import UIKit
 
@@ -24,6 +25,31 @@ extension Color {
             green: Double((hex >> 8) & 0xFF) / 255,
             blue: Double(hex & 0xFF) / 255
         )
+    }
+}
+
+/// The style guide uses a single family, Open Sans, in two weights. One variable font file
+/// provides both; the weight is chosen through the font's `wght` axis.
+enum AppFontWeight: CGFloat {
+    case regular = 400
+    case semibold = 600
+}
+
+extension UIFont {
+    /// Open Sans at `size`, scaled with the user's Dynamic Type setting.
+    static func app(_ size: CGFloat, _ weight: AppFontWeight = .regular) -> UIFont {
+        let weightAxis = 0x7767_6874 // 'wght'
+        let descriptor = UIFontDescriptor(fontAttributes: [
+            .family: "Open Sans",
+            UIFontDescriptor.AttributeName(rawValue: kCTFontVariationAttribute as String): [weightAxis: weight.rawValue],
+        ])
+        return UIFontMetrics.default.scaledFont(for: UIFont(descriptor: descriptor, size: size))
+    }
+}
+
+extension Font {
+    static func app(_ size: CGFloat, _ weight: AppFontWeight = .regular) -> Font {
+        Font(UIFont.app(size, weight))
     }
 }
 

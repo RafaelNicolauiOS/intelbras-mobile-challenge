@@ -15,7 +15,7 @@ struct SearchField: View {
                 .foregroundStyle(AppColors.text)
                 .accessibilityHidden(true)
             TextField("", text: $text, prompt: Text("Pesquisar").foregroundColor(AppColors.textSecondary))
-                .font(.system(size: 14))
+                .font(.app(14))
                 .foregroundStyle(AppColors.text)
                 .tint(AppColors.primary)
                 .autocorrectionDisabled()
@@ -52,7 +52,7 @@ struct FilterChipsRow: View {
                 ForEach(filters, id: \.self) { filter in
                     let isSelected = filter == selected
                     Button(filter.label) { onSelected(filter) }
-                        .font(.system(size: 14))
+                        .font(.app(14))
                         .padding(.horizontal, 14)
                         .frame(minHeight: 36)
                         .foregroundStyle(isSelected ? AppColors.primary : AppColors.text)

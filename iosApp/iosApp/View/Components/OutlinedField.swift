@@ -31,7 +31,7 @@ struct OutlinedField: View {
                     }
                 }
                 .focused($isFocused)
-                .font(.system(size: 16))
+                .font(.app(16))
                 .foregroundStyle(AppColors.text)
                 .tint(AppColors.primary)
                 .accessibilityLabel(label)
@@ -57,7 +57,7 @@ struct OutlinedField: View {
 
             if let errorText {
                 Text(errorText)
-                    .font(.system(size: 12))
+                    .font(.app(12))
                     .foregroundStyle(AppColors.error)
                     .padding(.leading, 16)
             }
@@ -67,7 +67,7 @@ struct OutlinedField: View {
 
     private var floatingLabel: some View {
         Text(label)
-            .font(.system(size: isFloating ? 12 : 16))
+            .font(.app(isFloating ? 12 : 16))
             .foregroundStyle(isFloating ? accent : AppColors.textSecondary)
             .padding(.horizontal, 4)
             .background(AppColors.background)

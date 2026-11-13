@@ -6,7 +6,7 @@ struct ToastBanner: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 14))
+            .font(.app(14))
             .foregroundStyle(AppColors.textOnDark)
             .padding(.horizontal, 16)
             .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
