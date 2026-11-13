@@ -65,7 +65,7 @@ class DeviceFormViewModel(
                 isLoading = false,
                 type = DeviceType.ALARM,
                 name = device.name,
-                macAddress = device.macAddress,
+                macAddress = DeviceValidator.formatMac(device.macAddress),
                 password = device.password,
             )
             is Device.Video -> current.copy(

@@ -32,7 +32,7 @@ object AppContainer {
     fun dashboardViewModel(): DashboardViewModel = DashboardViewModel(deviceRepository, messageCenter)
 
     fun deviceDetailsViewModel(deviceId: String): DeviceDetailsViewModel =
-        DeviceDetailsViewModel(deviceId, deviceRepository)
+        DeviceDetailsViewModel(deviceId, deviceRepository, messageCenter)
 
     /** A null [deviceId] opens the form in "add" mode. */
     fun deviceFormViewModel(deviceId: String?): DeviceFormViewModel =

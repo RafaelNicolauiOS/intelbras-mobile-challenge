@@ -33,6 +33,10 @@ object DeviceValidator {
     fun normalizeMac(input: String): String =
         input.trim().replace(":", "").replace("-", "").uppercase()
 
+    /** The API stores `A0B1C2D3E4F5`; people read `A0:B1:C2:D3:E4:F5`. */
+    fun formatMac(mac: String): String =
+        if (macRegex.matches(mac)) mac.chunked(2).joinToString(":") else mac
+
     fun validate(draft: DeviceDraft): DeviceFormErrors = when (draft) {
         is DeviceDraft.Alarm -> DeviceFormErrors(
             name = required(draft.name),

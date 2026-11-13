@@ -26,6 +26,8 @@ data class DashboardUiState(
     val devices: List<Device> = emptyList(),
     /** False when nothing is stored at all, as opposed to nothing matching the search. */
     val hasAnyDevice: Boolean = false,
+    /** How many devices are stored, regardless of the search. */
+    val totalCount: Int = 0,
     val query: String = "",
     val filter: DeviceFilter = DeviceFilter.ALL,
     /** Why the last sync failed, or null if it succeeded. */
@@ -55,6 +57,7 @@ class DashboardViewModel(
                 isRefreshing = sync.isRefreshing,
                 devices = devices.filteredBy(query, filter),
                 hasAnyDevice = devices.isNotEmpty(),
+                totalCount = devices.size,
                 query = query,
                 filter = filter,
                 error = sync.error,

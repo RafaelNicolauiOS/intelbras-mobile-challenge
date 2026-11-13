@@ -12,6 +12,9 @@ sealed interface Device {
     val isFavorite: Boolean
     val type: DeviceType
 
+    /** What tells this device apart from others of its type, as shown under its name. */
+    val identifier: String
+
     data class Alarm(
         override val id: String,
         override val name: String,
@@ -20,6 +23,7 @@ sealed interface Device {
         val password: String,
     ) : Device {
         override val type: DeviceType get() = DeviceType.ALARM
+        override val identifier: String get() = DeviceValidator.formatMac(macAddress)
     }
 
     data class Video(
@@ -31,5 +35,6 @@ sealed interface Device {
         val password: String,
     ) : Device {
         override val type: DeviceType get() = DeviceType.VIDEO
+        override val identifier: String get() = serial
     }
 }

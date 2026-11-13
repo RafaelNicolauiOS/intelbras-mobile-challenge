@@ -110,14 +110,15 @@ class DeviceFormViewModelTest {
         assertTrue(prefilled.isEditing)
         assertEquals(DeviceType.ALARM, prefilled.type)
         assertEquals("Casa", prefilled.name)
-        assertEquals("1A2B3C4D5E6F", prefilled.macAddress)
+        assertEquals("1A:2B:3C:4D:5E:6F", prefilled.macAddress, "shown the way people read a MAC")
 
         viewModel.onNameChange("Casa nova")
         viewModel.submit()
         viewModel.saved.first()
 
-        val updated = repository.observeDevices().first().single()
+        val updated = assertIs<Device.Alarm>(repository.observeDevices().first().single())
         assertEquals("a1", updated.id)
+        assertEquals("1A2B3C4D5E6F", updated.macAddress, "sent back without separators")
         assertEquals("Casa nova", updated.name)
         assertTrue(updated.isFavorite, "editing must not drop the favorite mark")
         assertEquals(UserMessage.Success(SuccessKind.DEVICE_UPDATED), messages.messages.first())

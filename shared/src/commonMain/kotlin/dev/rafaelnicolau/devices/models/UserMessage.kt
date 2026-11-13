@@ -1,6 +1,6 @@
 package dev.rafaelnicolau.devices.models
 
-enum class SuccessKind { DEVICE_CREATED, DEVICE_UPDATED, DEVICE_DELETED }
+enum class SuccessKind { DEVICE_CREATED, DEVICE_UPDATED, DEVICE_DELETED, COPIED }
 
 /** One-off feedback about an operation, shown to the user as a Snackbar/toast. */
 sealed interface UserMessage {

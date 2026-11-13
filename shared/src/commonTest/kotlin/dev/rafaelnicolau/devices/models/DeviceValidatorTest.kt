@@ -60,4 +60,11 @@ class DeviceValidatorTest {
         assertNull(DeviceValidator.validate(video.copy(password = "p@ss word!")).password)
         assertTrue(DeviceValidator.validate(video.copy(password = "")).hasErrors)
     }
+
+    @Test
+    fun formatMacAddsSeparatorsOnlyToAValidMac() {
+        assertEquals("1A:2B:3C:4D:5E:6F", DeviceValidator.formatMac("1A2B3C4D5E6F"))
+        assertEquals("123", DeviceValidator.formatMac("123"))
+        assertEquals("1A:2B:3C:4D:5E:6F", alarm.let { Device.Alarm("a", it.name, false, it.macAddress, it.password) }.identifier)
+    }
 }
