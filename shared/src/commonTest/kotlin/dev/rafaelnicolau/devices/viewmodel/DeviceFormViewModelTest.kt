@@ -149,4 +149,161 @@ class DeviceFormViewModelTest {
         assertFalse(state.isSaving)
         assertEquals("Portão", state.name, "what the user typed is kept")
     }
+
+    private val video = Device.Video(id = "v1", name = "Garagem", serial = "S1", username = "admin", password = " p ")
+
+    private fun DeviceFormViewModel.fillValidVideo() {
+        onNameChange("  Garagem  ")
+        onSerialChange(" S9 ")
+        onUsernameChange(" admin ")
+        onPasswordChange(" senha ")
+    }
+
+    @Test
+    fun addModeStartsEmptyOnTheVideoType() = runTest {
+        val state = DeviceFormViewModel(null, InMemoryDeviceRepository(), messages).uiState.value
+
+        assertFalse(state.isEditing)
+        assertFalse(state.isLoading)
+        assertEquals(DeviceType.VIDEO, state.type)
+        assertEquals("", state.name)
+    }
+
+    @Test
+    fun videoFormTrimsTextButKeepsThePasswordAsTyped() = runTest {
+        val repository = InMemoryDeviceRepository()
+        val viewModel = DeviceFormViewModel(null, repository, messages)
+        viewModel.fillValidVideo()
+
+        viewModel.submit()
+        viewModel.saved.first()
+
+        val created = assertIs<Device.Video>(repository.observeDevices().first().single())
+        assertEquals("Garagem", created.name)
+        assertEquals("S9", created.serial)
+        assertEquals("admin", created.username)
+        assertEquals(" senha ", created.password, "spaces may be part of a camera password")
+    }
+
+    @Test
+    fun emptyVideoFormFlagsEveryField() = runTest {
+        val viewModel = DeviceFormViewModel(null, InMemoryDeviceRepository(), messages)
+
+        viewModel.submit()
+
+        val errors = viewModel.uiState.value.errors
+        assertEquals(FieldError.REQUIRED, errors.name)
+        assertEquals(FieldError.REQUIRED, errors.serial)
+        assertEquals(FieldError.REQUIRED, errors.username)
+        assertEquals(FieldError.REQUIRED, errors.password)
+        assertNull(errors.macAddress)
+    }
+
+    @Test
+    fun switchingTypeClearsTheErrors() = runTest {
+        val viewModel = DeviceFormViewModel(null, InMemoryDeviceRepository(), messages)
+        viewModel.submit()
+
+        viewModel.onTypeChange(DeviceType.ALARM)
+
+        assertEquals(DeviceType.ALARM, viewModel.uiState.value.type)
+        assertFalse(viewModel.uiState.value.errors.hasErrors)
+    }
+
+    @Test
+    fun everyFieldClearsOnlyItsOwnError() = runTest {
+        val viewModel = DeviceFormViewModel(null, InMemoryDeviceRepository(), messages)
+        viewModel.submit()
+
+        viewModel.onSerialChange("S")
+        viewModel.onUsernameChange("u")
+        viewModel.onPasswordChange("p")
+
+        val errors = viewModel.uiState.value.errors
+        assertNull(errors.serial)
+        assertNull(errors.username)
+        assertNull(errors.password)
+        assertEquals(FieldError.REQUIRED, errors.name)
+    }
+
+    @Test
+    fun editingAVideoPrefillsItsFields() = runTest {
+        val viewModel = DeviceFormViewModel("v1", InMemoryDeviceRepository(listOf(video)), messages)
+
+        val state = viewModel.uiState.first { !it.isLoading }
+
+        assertEquals(DeviceType.VIDEO, state.type)
+        assertEquals("Garagem", state.name)
+        assertEquals("S1", state.serial)
+        assertEquals("admin", state.username)
+        assertEquals(" p ", state.password)
+    }
+
+    @Test
+    fun editStartsLoadingAndIgnoresSubmitUntilPrefilled() = runTest {
+        val repository = InMemoryDeviceRepository(listOf(video))
+        val viewModel = DeviceFormViewModel("v1", repository, messages)
+        assertTrue(viewModel.uiState.value.isLoading)
+
+        viewModel.submit()
+
+        assertFalse(viewModel.uiState.value.errors.hasErrors, "nothing is validated while loading")
+    }
+
+    @Test
+    fun editingADeviceThatNoLongerExistsStopsLoading() = runTest {
+        val viewModel = DeviceFormViewModel("gone", InMemoryDeviceRepository(), messages)
+
+        val state = viewModel.uiState.first { !it.isLoading }
+
+        assertTrue(state.isEditing)
+        assertEquals("", state.name)
+    }
+
+    @Test
+    fun secondSubmitWhileSavingIsIgnored() = runTest {
+        val repository = InMemoryDeviceRepository()
+        val viewModel = DeviceFormViewModel(null, repository, messages)
+        viewModel.fillValidVideo()
+
+        viewModel.submit()
+        assertTrue(viewModel.uiState.value.isSaving)
+        viewModel.submit()
+        advanceUntilIdle()
+
+        assertEquals(1, repository.observeDevices().first().size)
+    }
+
+    @Test
+    fun videoConflictPointsAtTheSerial() = runTest {
+        val repository = InMemoryDeviceRepository()
+        repository.nextOutcome = Outcome.Failure(DeviceError.CONFLICT)
+        val viewModel = DeviceFormViewModel(null, repository, messages)
+        viewModel.fillValidVideo()
+
+        viewModel.submit()
+        advanceUntilIdle()
+
+        assertEquals(FieldError.DUPLICATE, viewModel.uiState.value.errors.serial)
+        assertNull(viewModel.uiState.value.errors.macAddress)
+    }
+
+    @Test
+    fun otherFailuresOnlyReportTheErrorAndAllowRetry() = runTest {
+        val repository = InMemoryDeviceRepository()
+        repository.nextOutcome = Outcome.Failure(DeviceError.NETWORK)
+        val viewModel = DeviceFormViewModel(null, repository, messages)
+        viewModel.fillValidVideo()
+
+        viewModel.submit()
+
+        assertEquals(UserMessage.Failure(DeviceError.NETWORK), messages.messages.first())
+        assertFalse(viewModel.uiState.value.errors.hasErrors)
+        assertFalse(viewModel.uiState.value.isSaving)
+
+        repository.nextOutcome = Outcome.Success(Unit)
+        viewModel.submit()
+        viewModel.saved.first()
+        assertEquals(1, repository.observeDevices().first().size)
+    }
 }

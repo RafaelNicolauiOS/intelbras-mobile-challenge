@@ -160,4 +160,97 @@ class DefaultDeviceRepositoryTest {
         assertIs<Outcome.Success<Unit>>(repository.delete(device))
         assertTrue(devices().isEmpty())
     }
+
+    @Test
+    fun updateStoresTheServerAnswerAndKeepsTheFavorite() = runTest {
+        alarmsJson = list(alarm("a1", "Casa"))
+        repository.refresh()
+        repository.setFavorite("a1", favorite = true)
+        writeJson = """{"id":"a1","name":"Casa (editada)","macAddress":"AABBCCDDEEFF","password":"654321"}"""
+
+        val result = repository.update("a1", DeviceDraft.Alarm("Casa (editada)", "AABBCCDDEEFF", "654321"))
+
+        assertIs<Outcome.Success<Unit>>(result)
+        val updated = assertIs<Device.Alarm>(devices().single())
+        assertEquals("Casa (editada)", updated.name)
+        assertEquals("AABBCCDDEEFF", updated.macAddress)
+        assertTrue(updated.isFavorite)
+    }
+
+    @Test
+    fun failedUpdateKeepsTheStoredDevice() = runTest {
+        alarmsJson = list(alarm("a1", "Casa"))
+        repository.refresh()
+        writeStatus = HttpStatusCode.NotFound
+
+        val result = repository.update("a1", DeviceDraft.Alarm("Outro", "AABBCCDDEEFF", "654321"))
+
+        assertEquals(Outcome.Failure(DeviceError.NOT_FOUND), result)
+        assertEquals("Casa", devices().single().name)
+    }
+
+    @Test
+    fun unfavoritingRemovesTheMark() = runTest {
+        videosJson = list(video("v1", "Garagem"))
+        repository.refresh()
+        repository.setFavorite("v1", favorite = true)
+
+        repository.setFavorite("v1", favorite = false)
+
+        assertTrue(devices().none { it.isFavorite })
+    }
+
+    @Test
+    fun favoritingTwiceIsHarmless() = runTest {
+        videosJson = list(video("v1", "Garagem"))
+        repository.refresh()
+
+        repository.setFavorite("v1", favorite = true)
+        repository.setFavorite("v1", favorite = true)
+
+        assertTrue(devices().single().isFavorite)
+    }
+
+    @Test
+    fun deletingAFavoriteAlsoDropsItsMark() = runTest {
+        alarmsJson = list(alarm("a1", "Casa"))
+        repository.refresh()
+        repository.setFavorite("a1", favorite = true)
+
+        repository.delete(devices().single())
+        // The server still lists it (e.g. eventual consistency): it must come back unmarked.
+        repository.refresh()
+
+        assertTrue(devices().single().let { !it.isFavorite })
+    }
+
+    @Test
+    fun observeDeviceFollowsASingleDevice() = runTest {
+        videosJson = list(video("v1", "Garagem"), video("v2", "Portão"))
+        repository.refresh()
+
+        assertEquals("Portão", repository.observeDevice("v2").first()?.name)
+        assertEquals(null, repository.observeDevice("missing").first())
+    }
+
+    @Test
+    fun devicesAreSortedByNameIgnoringCase() = runTest {
+        videosJson = list(video("v1", "beta"), video("v2", "Alfa"), video("v3", "Gama"))
+
+        repository.refresh()
+
+        assertEquals(listOf("Alfa", "beta", "Gama"), devices().map { it.name })
+    }
+
+    @Test
+    fun emptyServerListClearsThatType() = runTest {
+        alarmsJson = list(alarm("a1", "Casa"))
+        videosJson = list(video("v1", "Garagem"))
+        repository.refresh()
+
+        alarmsJson = list()
+        repository.refresh()
+
+        assertEquals(listOf("v1"), devices().map { it.id })
+    }
 }

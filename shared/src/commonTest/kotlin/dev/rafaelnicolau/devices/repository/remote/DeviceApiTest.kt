@@ -131,6 +131,85 @@ class DeviceApiTest {
     }
 
     @Test
+    fun alarmListIsReadFromTheAlarmResource() = runTest {
+        val api = api { request ->
+            assertEquals("/alarm-centrals", request.url.encodedPath)
+            json("""{"count":1,"data":[{"id":"a1","name":"Casa","macAddress":"1A2B3C4D5E6F","password":"1234","extra":true}]}""")
+        }
+
+        assertEquals(listOf(AlarmCentralDto("a1", "Casa", "1A2B3C4D5E6F", "1234")), api.getAlarmCentrals())
+    }
+
+    @Test
+    fun listWithoutDataIsEmpty() = runTest {
+        assertEquals(emptyList(), api { json("{}") }.getVideoDevices())
+    }
+
+    @Test
+    fun createSendsAJsonPostToTheRightResource() = runTest {
+        val seen = mutableListOf<HttpRequestData>()
+        val api = api { request ->
+            seen += request
+            if (request.url.encodedPath.startsWith("/alarm")) {
+                json("""{"id":"a1","name":"Casa","macAddress":"1A2B3C4D5E6F","password":"1234"}""")
+            } else {
+                json("""{"id":"v1","name":"Garagem","serial":"S1","username":"admin","password":"x"}""")
+            }
+        }
+
+        val alarm = api.createAlarmCentral(AlarmCentralBody("Casa", "1A2B3C4D5E6F", "1234"))
+        val video = api.createVideoDevice(VideoDeviceBody("Garagem", "S1", "admin", "x"))
+
+        assertEquals("a1", alarm.id)
+        assertEquals("v1", video.id)
+        assertEquals(listOf(HttpMethod.Post, HttpMethod.Post), seen.map { it.method })
+        assertEquals(listOf("/alarm-centrals", "/video-devices"), seen.map { it.url.encodedPath })
+        assertTrue(seen.all { it.body.contentType?.toString()?.startsWith("application/json") == true })
+    }
+
+    @Test
+    fun updateVideoSendsAPatchToTheDevice() = runTest {
+        var seen: HttpRequestData? = null
+        val api = api { request ->
+            seen = request
+            json("""{"id":"v1","name":"G","serial":"S1","username":"admin","password":"x"}""")
+        }
+
+        api.updateVideoDevice("v1", VideoDeviceBody("G", "S1", "admin", "x"))
+
+        assertEquals(HttpMethod.Patch, seen?.method)
+        assertEquals("/video-devices/v1", seen?.url?.encodedPath)
+    }
+
+    @Test
+    fun deleteTargetsTheDeviceOfEachType() = runTest {
+        val seen = mutableListOf<HttpRequestData>()
+        val api = api { request ->
+            seen += request
+            json("")
+        }
+
+        api.deleteAlarmCentral("a1")
+        api.deleteVideoDevice("v1")
+
+        assertEquals(listOf(HttpMethod.Delete, HttpMethod.Delete), seen.map { it.method })
+        assertEquals(listOf("/alarm-centrals/a1", "/video-devices/v1"), seen.map { it.url.encodedPath })
+    }
+
+    @Test
+    fun baseUrlWithTrailingSlashIsNotDoubled() = runTest {
+        var seen: HttpRequestData? = null
+        val engine = MockEngine { request ->
+            seen = request
+            json("""{"count":0,"data":[]}""")
+        }
+
+        DeviceApi(createHttpClient(ApiConfig("http://api.test/", "t"), engine)).getVideoDevices()
+
+        assertEquals("http://api.test/video-devices", seen?.url.toString())
+    }
+
+    @Test
     fun nothingIsLoggedUnlessEnabled() = runTest {
         val lines = mutableListOf<String>()
         val engine = MockEngine { json("""{"count":0,"data":[]}""") }

@@ -29,6 +29,9 @@ jobs:
         run: ./gradlew :androidApp:lintDebug
       - name: Shared module tests (JVM)
         run: ./gradlew :shared:testAndroidHostTest
+      # Screens, components, coordinator and texts, rendered with Robolectric on the JVM.
+      - name: Android app unit tests
+        run: ./gradlew :androidApp:testDebugUnitTest
       - name: Build debug APK
         run: ./gradlew :androidApp:assembleDebug
       - name: Upload reports
@@ -38,6 +41,7 @@ jobs:
           name: android-reports
           path: |
             androidApp/build/reports
+            androidApp/build/test-results
             shared/build/reports
           if-no-files-found: ignore
 
@@ -54,18 +58,28 @@ jobs:
       # Includes the repository tests, which run against a real Room database.
       - name: Shared module tests (iOS simulator)
         run: ./gradlew :shared:iosSimulatorArm64Test
-      - name: Build iOS app
+      # Builds the app and runs the Swift unit tests (iosAppTests) on the newest iPhone simulator.
+      - name: Build iOS app and run Swift tests
         run: |
-          xcodebuild build \
+          UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          devices = json.load(sys.stdin)['devices']
+          runtimes = sorted((k for k in devices if '.iOS-' in k), key=lambda k: [int(p) for p in k.split('.iOS-')[1].split('-') if p.isdigit()], reverse=True)
+          print(next(d['udid'] for k in runtimes for d in devices[k] if d['name'].startswith('iPhone')))
+          ")
+          xcodebuild test \
             -project iosApp/iosApp.xcodeproj \
             -scheme iosApp \
             -configuration Debug \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            -resultBundlePath build/ios-tests.xcresult \
             CODE_SIGNING_ALLOWED=NO
       - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ios-reports
-          path: shared/build/reports
+          path: |
+            shared/build/reports
+            build/ios-tests.xcresult
           if-no-files-found: ignore

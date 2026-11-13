@@ -53,11 +53,35 @@ targets:
         script: |
           cd "$SRCROOT/.."
           ./gradlew :shared:embedAndSignAppleFrameworkForXcode
+  # Unit tests for the Swift layer (texts, theme, observables, coordinators, view controllers
+  # and views). Hosted by the app, so the Kotlin framework linked into it is shared, not duplicated.
+  iosAppTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - iosAppTests
+    dependencies:
+      - target: iosApp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.rafaelnicolau.devices.tests
+        GENERATE_INFOPLIST_FILE: "YES"
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+        # Only to `import Shared`; its symbols come from the host app (no second Kotlin runtime).
+        FRAMEWORK_SEARCH_PATHS: "$(inherited) $(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)"
+        "EXCLUDED_ARCHS[sdk=iphonesimulator*]": x86_64
 # A shared scheme, so a fresh clone (and CI) can build without opening Xcode first.
 schemes:
   iosApp:
     build:
       targets:
         iosApp: all
+        iosAppTests: [test]
     run:
       config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      targets:
+        - iosAppTests
