@@ -9,10 +9,11 @@ final class DashboardViewController: UIHostingController<DashboardView> {
     init(
         observable: DashboardObservable,
         onAddDevice: @escaping () -> Void,
-        onOpenDevice: @escaping (Device) -> Void
+        onOpenDevice: @escaping (Device) -> Void,
+        onEditDevice: @escaping (Device) -> Void
     ) {
         self.onAddDevice = onAddDevice
-        super.init(rootView: DashboardView(observable: observable, onOpenDevice: onOpenDevice))
+        super.init(rootView: DashboardView(observable: observable, onOpenDevice: onOpenDevice, onEditDevice: onEditDevice))
         title = "Dispositivos"
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .add,

@@ -26,8 +26,20 @@ final class DashboardObservable: ObservableObject {
         viewModel.clear()
     }
 
+    func onQueryChange(_ value: String) {
+        viewModel.onQueryChange(value: value)
+    }
+
+    func onFilterSelected(_ filter: DeviceFilter) {
+        viewModel.onFilterSelected(value: filter)
+    }
+
     func refresh() {
         viewModel.refresh()
+    }
+
+    func delete(_ device: Device) {
+        viewModel.delete(device: device)
     }
 
     func toggleFavorite(_ device: Device) {

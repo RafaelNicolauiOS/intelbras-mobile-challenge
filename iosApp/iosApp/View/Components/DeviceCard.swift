@@ -3,22 +3,28 @@ import SwiftUI
 
 struct DeviceCard: View {
     let device: Device
-    let onToggleFavorite: () -> Void
+    let onMore: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: iconName)
                 .frame(width: 32)
-                .accessibilityHidden(true)
+                .accessibilityLabel(device.type.label)
             Text(device.name)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Button(action: onToggleFavorite) {
-                Image(systemName: device.isFavorite ? "star.fill" : "star")
+            if device.isFavorite {
+                Image(systemName: "star.fill")
+                    .foregroundStyle(.yellow)
+                    .accessibilityLabel("Favorito")
+            }
+            Button(action: onMore) {
+                Image(systemName: "ellipsis")
+                    .rotationEffect(.degrees(90))
+                    .frame(width: 44, height: 44)
             }
             .buttonStyle(.borderless)
-            .accessibilityLabel(device.isFavorite ? "Desmarcar favorito" : "Marcar favorito")
+            .accessibilityLabel("Mais opções de \(device.name)")
         }
-        .padding(.vertical, 4)
     }
 
     private var iconName: String {

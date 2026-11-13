@@ -10,25 +10,35 @@
 		0229E590C8BF25BBAB9824DC /* DeviceDetailsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AD68A58C347A4867DA358FE /* DeviceDetailsViewController.swift */; };
 		160FB2BA0D6E81E8E2F0922D /* DeviceDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4EBC1DCD0B2A5AB1CAE6F98 /* DeviceDetailsView.swift */; };
 		308715595987EFBB4424EE28 /* DeviceDetailsObservable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 812FF487EFD40088DE2E79A2 /* DeviceDetailsObservable.swift */; };
+		3E7A06815D1F22B3702CF782 /* DeviceFormObservable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76D3E4D3A5F8360840570D32 /* DeviceFormObservable.swift */; };
 		621C0849AD30238FAEDFED8D /* DashboardObservable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DBE8C0646832DBFE7511E0D /* DashboardObservable.swift */; };
 		6E563F5EA06E0F453F5C5E52 /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E32F3C11E15E25D811147ED /* AppCoordinator.swift */; };
 		6EEE701F1D9484D43A862BE9 /* DeviceFormViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 860E892CA03455F865F6B189 /* DeviceFormViewController.swift */; };
 		8464CFDBB00AF816ECA5F7AC /* DeviceFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF046FFB99830E73063CE4E7 /* DeviceFormView.swift */; };
 		84EAFC6097CEBD0DB200FD11 /* DeviceCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 255C2FDC6590DC9DF9C70AD0 /* DeviceCard.swift */; };
 		8FAFEC0B24682CF5BDDC53AD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B43EC0E08445403CA0A6D591 /* AppDelegate.swift */; };
+		94666FCF8A9DEC93AF186DD1 /* SearchAndFilters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EAFF951197BCD36201CE618 /* SearchAndFilters.swift */; };
 		9E4DB2C7B4FB040157582764 /* Coordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 791D994BC77D9E0D6E6C425C /* Coordinator.swift */; };
+		A04E9A4A5F486F6720C33FD4 /* ToastPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F673041E4C3F3B9DE9F9AF45 /* ToastPresenter.swift */; };
+		A4CA8F289D76C7FC1D3BDAFA /* ToastBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 185D0B48D26C09282F23F391 /* ToastBanner.swift */; };
 		BAD074E953D5F3F6F43A8728 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BA404AA9251B5A81FE46680 /* SceneDelegate.swift */; };
+		BC232D72404AE3CA57D644C7 /* DeviceActionsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EC27C5759C783FC8ADED981 /* DeviceActionsSheet.swift */; };
 		D32147516E84D6BA9C6B3238 /* DevicesCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B6202D3E7111A082B83196B /* DevicesCoordinator.swift */; };
+		E1FF18CBC3C68B8D0B248700 /* Texts.swift in Sources */ = {isa = PBXBuildFile; fileRef = C728EE8BAE808A43A1545D26 /* Texts.swift */; };
 		E7D0848D0C7843277E4B41E6 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B34852826287D430203BC836 /* DashboardView.swift */; };
 		EB1DEEB8ED2984D2DE32D1B2 /* DashboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A325793FEB7515E737393CD /* DashboardViewController.swift */; };
 		F47229F48800911E7538A306 /* StatusMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 999CF9AB76D911B2907ED066 /* StatusMessage.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		185D0B48D26C09282F23F391 /* ToastBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastBanner.swift; sourceTree = "<group>"; };
 		1DBE8C0646832DBFE7511E0D /* DashboardObservable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardObservable.swift; sourceTree = "<group>"; };
 		255C2FDC6590DC9DF9C70AD0 /* DeviceCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceCard.swift; sourceTree = "<group>"; };
 		3A325793FEB7515E737393CD /* DashboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewController.swift; sourceTree = "<group>"; };
+		3EC27C5759C783FC8ADED981 /* DeviceActionsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceActionsSheet.swift; sourceTree = "<group>"; };
+		4EAFF951197BCD36201CE618 /* SearchAndFilters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchAndFilters.swift; sourceTree = "<group>"; };
 		6B6202D3E7111A082B83196B /* DevicesCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesCoordinator.swift; sourceTree = "<group>"; };
+		76D3E4D3A5F8360840570D32 /* DeviceFormObservable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceFormObservable.swift; sourceTree = "<group>"; };
 		791D994BC77D9E0D6E6C425C /* Coordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Coordinator.swift; sourceTree = "<group>"; };
 		7AD68A58C347A4867DA358FE /* DeviceDetailsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceDetailsViewController.swift; sourceTree = "<group>"; };
 		812FF487EFD40088DE2E79A2 /* DeviceDetailsObservable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceDetailsObservable.swift; sourceTree = "<group>"; };
@@ -41,8 +51,10 @@
 		B34852826287D430203BC836 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		B43EC0E08445403CA0A6D591 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C117AD187833E2513BD2F553 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		C728EE8BAE808A43A1545D26 /* Texts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Texts.swift; sourceTree = "<group>"; };
 		D1A296DCA66B894471E0941C /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		F4EBC1DCD0B2A5AB1CAE6F98 /* DeviceDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceDetailsView.swift; sourceTree = "<group>"; };
+		F673041E4C3F3B9DE9F9AF45 /* ToastPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastPresenter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -64,6 +76,7 @@
 			children = (
 				1DBE8C0646832DBFE7511E0D /* DashboardObservable.swift */,
 				812FF487EFD40088DE2E79A2 /* DeviceDetailsObservable.swift */,
+				76D3E4D3A5F8360840570D32 /* DeviceFormObservable.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -80,8 +93,12 @@
 		403E7F140624D14150B15AB0 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				3EC27C5759C783FC8ADED981 /* DeviceActionsSheet.swift */,
 				255C2FDC6590DC9DF9C70AD0 /* DeviceCard.swift */,
+				4EAFF951197BCD36201CE618 /* SearchAndFilters.swift */,
 				999CF9AB76D911B2907ED066 /* StatusMessage.swift */,
+				C728EE8BAE808A43A1545D26 /* Texts.swift */,
+				185D0B48D26C09282F23F391 /* ToastBanner.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -119,6 +136,7 @@
 				8E32F3C11E15E25D811147ED /* AppCoordinator.swift */,
 				791D994BC77D9E0D6E6C425C /* Coordinator.swift */,
 				6B6202D3E7111A082B83196B /* DevicesCoordinator.swift */,
+				F673041E4C3F3B9DE9F9AF45 /* ToastPresenter.swift */,
 			);
 			path = Coordinator;
 			sourceTree = "<group>";
@@ -229,15 +247,21 @@
 				621C0849AD30238FAEDFED8D /* DashboardObservable.swift in Sources */,
 				E7D0848D0C7843277E4B41E6 /* DashboardView.swift in Sources */,
 				EB1DEEB8ED2984D2DE32D1B2 /* DashboardViewController.swift in Sources */,
+				BC232D72404AE3CA57D644C7 /* DeviceActionsSheet.swift in Sources */,
 				84EAFC6097CEBD0DB200FD11 /* DeviceCard.swift in Sources */,
 				308715595987EFBB4424EE28 /* DeviceDetailsObservable.swift in Sources */,
 				160FB2BA0D6E81E8E2F0922D /* DeviceDetailsView.swift in Sources */,
 				0229E590C8BF25BBAB9824DC /* DeviceDetailsViewController.swift in Sources */,
+				3E7A06815D1F22B3702CF782 /* DeviceFormObservable.swift in Sources */,
 				8464CFDBB00AF816ECA5F7AC /* DeviceFormView.swift in Sources */,
 				6EEE701F1D9484D43A862BE9 /* DeviceFormViewController.swift in Sources */,
 				D32147516E84D6BA9C6B3238 /* DevicesCoordinator.swift in Sources */,
 				BAD074E953D5F3F6F43A8728 /* SceneDelegate.swift in Sources */,
+				94666FCF8A9DEC93AF186DD1 /* SearchAndFilters.swift in Sources */,
 				F47229F48800911E7538A306 /* StatusMessage.swift in Sources */,
+				E1FF18CBC3C68B8D0B248700 /* Texts.swift in Sources */,
+				A4CA8F289D76C7FC1D3BDAFA /* ToastBanner.swift in Sources */,
+				A04E9A4A5F486F6720C33FD4 /* ToastPresenter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

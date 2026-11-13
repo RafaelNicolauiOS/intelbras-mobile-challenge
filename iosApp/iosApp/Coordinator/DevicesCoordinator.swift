@@ -15,7 +15,8 @@ final class DevicesCoordinator: Coordinator {
         let viewController = DashboardViewController(
             observable: observable,
             onAddDevice: { [weak self] in self?.showAddDevice() },
-            onOpenDevice: { [weak self] device in self?.showDeviceDetails(deviceId: device.id) }
+            onOpenDevice: { [weak self] device in self?.showDeviceDetails(deviceId: device.id) },
+            onEditDevice: { [weak self] device in self?.showEditDevice(deviceId: device.id) }
         )
         navigationController.setViewControllers([viewController], animated: false)
     }
@@ -32,10 +33,20 @@ final class DevicesCoordinator: Coordinator {
     }
 
     func showAddDevice() {
-        navigationController.pushViewController(DeviceFormViewController(deviceId: nil), animated: true)
+        showDeviceForm(deviceId: nil)
     }
 
     func showEditDevice(deviceId: String) {
-        navigationController.pushViewController(DeviceFormViewController(deviceId: deviceId), animated: true)
+        showDeviceForm(deviceId: deviceId)
+    }
+
+    /// A nil `deviceId` opens the form in "add" mode. The form closes itself once saved.
+    private func showDeviceForm(deviceId: String?) {
+        let observable = DeviceFormObservable(
+            viewModel: AppContainer.shared.deviceFormViewModel(deviceId: deviceId),
+            onSaved: { [weak self] in self?.navigationController.popViewController(animated: true) }
+        )
+        let viewController = DeviceFormViewController(observable: observable, isEditing: deviceId != nil)
+        navigationController.pushViewController(viewController, animated: true)
     }
 }
