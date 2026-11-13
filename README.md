@@ -198,14 +198,30 @@ Isso está coberto por testes que usam um banco Room real em memória (`DefaultD
 
 **Injeção de dependência manual.** O `AppContainer` monta o grafo de objetos. Para um app deste tamanho é suficiente e não esconde nada; com mais telas eu trocaria por Koin.
 
+### Interface e protótipo
+
+As telas seguem o protótipo e o guia de estilo do Figma nas duas plataformas: paleta, hierarquia de texto, card único com a lista de dispositivos, busca em formato de pílula, chips, botão "Adicionar" na base, bottom sheet de ações, campos com contorno e Snackbar escuro. As cores do guia estão centralizadas em `AppColors` (um arquivo por plataforma, com os mesmos nomes do guia).
+
+O protótipo define um único tema claro, então o app não acompanha o modo escuro do sistema.
+
+Diferenças em relação ao protótipo:
+
+| No protótipo | No app | Motivo |
+|---|---|---|
+| Fonte Open Sans | Fonte do sistema (Roboto / SF) | Ainda não embuti os arquivos da fonte; pesos e tamanhos seguem o guia |
+| Ícones próprios do guia | Material Icons no Android, SF Symbols no iOS | Ícones equivalentes da plataforma, sem exportar os SVGs |
+| "Ativo" abaixo do nome, em Informações | Não exibido | A API não informa status do dispositivo; mostrar um valor fixo seria inventar dado |
+| Lista sem indicação de favorito | Igual ao protótipo | O favorito aparece pelo chip "Favoritos" e pelo texto da ação no bottom sheet |
+
 ### Adaptações de iOS
 
 | No protótipo / Android | No iOS | Motivo |
 |---|---|---|
-| Snackbar | Banner próprio na parte inferior | O iOS não tem Snackbar nativo; o papel de feedback é o mesmo |
+| Snackbar | Banner próprio, com o mesmo visual | O iOS não tem Snackbar nativo |
 | Bottom Sheet | `.sheet` com `presentationDetents` | Componente nativo equivalente |
-| Diálogo de confirmação ao remover | `confirmationDialog` | Padrão da plataforma para ações destrutivas |
-| Botão flutuante "Adicionar" | Botão "+" na barra de navegação | Convenção do iOS |
+| Modal "Remover dispositivo?" | `confirmationDialog` com os mesmos textos | Padrão da plataforma para ações destrutivas |
+| Barra superior do formulário e de Informações | Barra de navegação nativa (fechar, título e "Salvar") | Mantém gestos e comportamento esperados no iOS |
+| Aviso "Copiado" | Exibido no iOS e no Android até a versão 12 | A partir do Android 13 o sistema já mostra a própria confirmação de cópia |
 | Estado observável | `ObservableObject` | A macro `@Observable` exige iOS 17; o alvo é iOS 16 |
 
 ## Testes e CI
@@ -221,7 +237,7 @@ Os testes ficam no módulo `shared` e cobrem as regras de negócio:
 | `DashboardViewModelTest` | Estados de carregamento, erro com dados em cache, filtros, favoritar, remover |
 | `DeviceFormViewModelTest` | Validação, criação, edição pré-preenchida, conflito 409 |
 
-Hoje são 43 testes no alvo iOS e 36 na JVM. A diferença são os testes do repositório, que usam o Room em memória e só rodam no simulador iOS.
+Hoje são 44 testes no alvo iOS e 37 na JVM. A diferença são os testes do repositório, que usam o Room em memória e só rodam no simulador iOS.
 
 O [workflow de CI](.github/workflows/ci.yml) roda a cada push e pull request:
 
@@ -232,7 +248,7 @@ O [workflow de CI](.github/workflows/ci.yml) roda a cada push e pull request:
 
 **Pendente em relação ao case**
 
-- **Fidelidade ao protótipo do Figma.** As telas usam os componentes padrão de cada plataforma (Material 3 e SwiftUI) e ainda não aplicam cores, tipografia e ícones do guia de estilo.
+- **Fonte Open Sans e ícones do guia de estilo.** O layout e as cores seguem o protótipo, mas a fonte é a do sistema e os ícones são os equivalentes de cada plataforma.
 - **Validação em iOS 16.** O deployment target é 16.0, mas só testei em simuladores mais novos; não tinha o runtime 16 instalado.
 - **Offline no iOS não foi testado manualmente**, só no Android (o simulador usa a rede do Mac). A regra é a mesma e está coberta por testes.
 
@@ -244,5 +260,5 @@ O [workflow de CI](.github/workflows/ci.yml) roda a cada push e pull request:
 - **Ferramentas de qualidade**: ktlint e detekt no Kotlin, SwiftLint no Swift, rodando no CI.
 - **Koin** no lugar da composição manual.
 - **Textos em arquivos de recursos** (`strings.xml` / `Localizable.strings`); hoje estão no código de cada app.
-- **Acessibilidade e tema**: revisar com TalkBack/VoiceOver e validar o tema escuro com as cores do guia de estilo.
+- **Acessibilidade**: revisar os fluxos com TalkBack e VoiceOver e com fontes ampliadas.
 - **Modularização do `shared`** em módulos menores (rede, banco, domínio) se o app crescer.
