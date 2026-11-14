@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import dev.rafaelnicolau.devices.models.DeviceError
 import dev.rafaelnicolau.devices.models.DeviceFilter
 import dev.rafaelnicolau.devices.models.DeviceType
+import dev.rafaelnicolau.devices.models.DeviceValidator
 import dev.rafaelnicolau.devices.models.FieldError
 import dev.rafaelnicolau.devices.models.SuccessKind
 import dev.rafaelnicolau.devices.models.UserMessage
@@ -19,6 +20,7 @@ fun UserMessage.text(): String = when (this) {
         SuccessKind.COPIED -> "Copiado"
     }
     is UserMessage.Failure -> error.message()
+    is UserMessage.Invalid -> error.text()
 }
 
 fun DeviceError.message(): String = when (this) {
@@ -34,6 +36,7 @@ fun FieldError.text(): String = when (this) {
     FieldError.REQUIRED -> "Campo obrigatório."
     FieldError.INVALID_MAC -> "Informe os 12 caracteres do MAC (0-9, A-F)."
     FieldError.INVALID_ALARM_PASSWORD -> "A senha deve ter 4 ou 6 dígitos."
+    FieldError.INVALID_SERIAL -> "O número de série deve conter ${DeviceValidator.SERIAL_LENGTH} caracteres."
     FieldError.DUPLICATE -> "Já está em uso por outro dispositivo."
 }
 

@@ -30,13 +30,21 @@ struct DeviceFormView: View {
                             field("Senha", state.password, state.errors.password, { observable.onPasswordChange($0) }, isSecure: true)
                                 .keyboardType(.numberPad)
                         case .video:
-                            field("Número de série", state.serial, state.errors.serial, { observable.onSerialChange($0) })
+                            field(
+                                "Número de série",
+                                state.serial,
+                                state.errors.serial,
+                                { observable.onSerialChange($0) },
+                                maxLength: Int(DeviceValidator.shared.SERIAL_LENGTH)
+                            )
                             field("Usuário", state.username, state.errors.username, { observable.onUsernameChange($0) })
                                 .textInputAutocapitalization(.never)
                             field("Senha", state.password, state.errors.password, { observable.onPasswordChange($0) }, isSecure: true)
                         }
                     }
                     .padding(16)
+                    // Switching type starts an empty form: new fields, so no text carries over.
+                    .id(state.type)
                 }
                 .autocorrectionDisabled()
             }
@@ -76,8 +84,9 @@ struct DeviceFormView: View {
         _ text: String,
         _ error: FieldError?,
         _ onChange: @escaping @MainActor @Sendable (String) -> Void,
-        isSecure: Bool = false
+        isSecure: Bool = false,
+        maxLength: Int? = nil
     ) -> some View {
-        OutlinedField(label: label, text: text, errorText: error?.text, isSecure: isSecure, onChange: onChange)
+        OutlinedField(label: label, text: text, errorText: error?.text, isSecure: isSecure, maxLength: maxLength, onChange: onChange)
     }
 }

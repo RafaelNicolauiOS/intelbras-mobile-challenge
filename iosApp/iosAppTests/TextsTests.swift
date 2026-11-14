@@ -32,6 +32,11 @@ final class TextsTests: XCTestCase {
         XCTAssertEqual(FieldError.invalidMac.text, "Informe os 12 caracteres do MAC (0-9, A-F).")
         XCTAssertEqual(FieldError.invalidAlarmPassword.text, "A senha deve ter 4 ou 6 dígitos.")
         XCTAssertEqual(FieldError.duplicate.text, "Já está em uso por outro dispositivo.")
+        XCTAssertEqual(FieldError.invalidSerial.text, "O número de série deve conter 13 caracteres.")
+    }
+
+    func testInvalidFormMessageIsTheFieldErrorText() {
+        XCTAssertEqual(UserMessageInvalid(error: .invalidSerial).text, "O número de série deve conter 13 caracteres.")
     }
 
     func testTypeNamesAndIcons() {

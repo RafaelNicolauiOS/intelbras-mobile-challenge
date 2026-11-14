@@ -258,10 +258,10 @@ Há testes nas três camadas: regras de negócio no `shared` e a camada de apres
 
 | Suíte | Onde roda | Testes |
 |---|---|---:|
-| `shared` (commonTest) | JVM | 104 |
-| `shared` (commonTest + iosTest) | Simulador iOS | 125 |
-| `androidApp` | JVM, com Robolectric | 69 |
-| `iosAppTests` | Simulador iOS | 59 |
+| `shared` (commonTest) | JVM | 111 |
+| `shared` (commonTest + iosTest) | Simulador iOS | 132 |
+| `androidApp` | JVM, com Robolectric | 72 |
+| `iosAppTests` | Simulador iOS | 63 |
 
 O alvo iOS do `shared` tem mais testes porque inclui os de repositório e DAO, que usam um Room real em memória e só rodam no simulador iOS (no Android, o Room exige um `Context`).
 
@@ -269,7 +269,7 @@ O alvo iOS do `shared` tem mais testes porque inclui os de repositório e DAO, q
 
 | Arquivo | O que verifica |
 |---|---|
-| `DeviceValidatorTest` | Campos obrigatórios, formato do MAC, senha do alarme com 4 ou 6 dígitos |
+| `DeviceValidatorTest` | Campos obrigatórios, formato do MAC, senha do alarme com 4 ou 6 dígitos, número de série com 13 caracteres |
 | `DeviceFilterTest` | Chips e busca por nome, ignorando maiúsculas e acentos; normalização calculada uma vez por dispositivo |
 | `DeviceTest` | Tipo e identificador de cada dispositivo, `hasErrors` do formulário |
 | `DeviceApiTest` | Método e URL de cada endpoint, token no cabeçalho, corpo JSON, tradução de erros, log sem o token |
@@ -279,7 +279,7 @@ O alvo iOS do `shared` tem mais testes porque inclui os de repositório e DAO, q
 | `DefaultDeviceRepositoryTest` | Sincronização com banco real: favoritos preservados, remoção no servidor, falha parcial, criar, editar, remover, ordenação |
 | `DeviceDaoTest` | SQL do DAO: upsert, substituição por tipo, favoritos órfãos, remoção com o favorito |
 | `DashboardViewModelTest` | Carregamento, refresh, erro com dados em cache, busca com `debounce`, filtros, contagem, favoritar, remover |
-| `DeviceFormViewModelTest` | Validação dos dois tipos, limpeza de erros, criação, edição pré-preenchida, envio duplo, conflito 409, nova tentativa |
+| `DeviceFormViewModelTest` | Validação dos dois tipos, formulário vazio ao trocar o tipo, limpeza de erros, criação, edição pré-preenchida, envio duplo, conflito 409, nova tentativa |
 | `DeviceDetailsViewModelTest` | Dispositivo exibido, atualizado e removido; aviso de cópia; `clear()` encerra o escopo |
 | `MessageCenterTest` | Cada aviso chega uma única vez, em ordem, mesmo se postado antes de alguém escutar |
 

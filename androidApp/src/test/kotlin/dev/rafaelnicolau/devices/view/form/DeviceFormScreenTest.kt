@@ -11,7 +11,12 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import dev.rafaelnicolau.devices.models.DeviceFormErrors
+import dev.rafaelnicolau.devices.repository.InMemoryDeviceRepository
+import dev.rafaelnicolau.devices.viewmodel.DeviceFormViewModel
+import dev.rafaelnicolau.devices.viewmodel.MessageCenter
 import dev.rafaelnicolau.devices.models.DeviceType
 import dev.rafaelnicolau.devices.models.FieldError
 import dev.rafaelnicolau.devices.view.theme.AppTheme
@@ -167,5 +172,50 @@ class DeviceFormScreenTest {
         compose.onNodeWithContentDescription("Fechar").performClick()
 
         assertEquals(listOf("submit", "back"), events)
+    }
+
+    // With the real ViewModel: the field shows what the shared rules allow.
+
+    private fun showWithViewModel(): DeviceFormViewModel {
+        val viewModel = DeviceFormViewModel(null, InMemoryDeviceRepository(), MessageCenter())
+        compose.setContent {
+            val state by viewModel.uiState.collectAsState()
+            AppTheme {
+                DeviceFormScreen(
+                    state = state,
+                    actions = DeviceFormActions(
+                        onTypeChange = viewModel::onTypeChange,
+                        onNameChange = viewModel::onNameChange,
+                        onMacAddressChange = viewModel::onMacAddressChange,
+                        onSerialChange = viewModel::onSerialChange,
+                        onUsernameChange = viewModel::onUsernameChange,
+                        onPasswordChange = viewModel::onPasswordChange,
+                        onSubmit = viewModel::submit,
+                        onBack = {},
+                    ),
+                )
+            }
+        }
+        return viewModel
+    }
+
+    @Test
+    fun serialFieldStopsAtThirteenCharacters() {
+        showWithViewModel()
+
+        compose.onNodeWithText("Número de série").performTextInput("ABC1234567890XYZ")
+
+        compose.onNodeWithText("ABC1234567890").assertExists()
+        compose.onNodeWithText("ABC1234567890XYZ").assertDoesNotExist()
+    }
+
+    @Test
+    fun shortSerialShowsTheLengthErrorUnderTheField() {
+        showWithViewModel()
+
+        compose.onNodeWithText("Número de série").performTextInput("ABC123")
+        compose.onNodeWithText("Salvar").performClick()
+
+        compose.onNodeWithText("O número de série deve conter 13 caracteres.").assertExists()
     }
 }

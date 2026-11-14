@@ -41,6 +41,24 @@ final class DeviceFormObservableTests: XCTestCase {
         XCTAssertEqual(observable.state.password, "1234")
     }
 
+    /// Switching between video and alarm starts an empty form, and the fields see it at once.
+    func testSwitchingTypeEmptiesTheFieldsImmediately() {
+        let observable = makeObservable()
+        observable.onNameChange("Garagem")
+        observable.onSerialChange("S1")
+        observable.onUsernameChange("admin")
+        observable.onPasswordChange("x")
+
+        observable.onTypeChange(.alarm)
+
+        XCTAssertEqual(observable.state.type, .alarm)
+        XCTAssertEqual(
+            [observable.state.name, observable.state.macAddress, observable.state.serial,
+             observable.state.username, observable.state.password],
+            ["", "", "", "", ""]
+        )
+    }
+
     func testVideoFieldsArePublished() {
         let observable = makeObservable()
 
@@ -49,6 +67,33 @@ final class DeviceFormObservableTests: XCTestCase {
 
         XCTAssertEqual(observable.state.serial, "S1")
         XCTAssertEqual(observable.state.username, "admin")
+    }
+
+    func testSerialStopsAtThirteenCharacters() {
+        let observable = makeObservable()
+
+        observable.onSerialChange("ABC1234567890XYZ")
+
+        XCTAssertEqual(observable.state.serial, "ABC1234567890")
+    }
+
+    func testShortSerialShowsTheFieldErrorAndAToast() async {
+        let messages = MessageCenter()
+        let observable = DeviceFormObservable(
+            viewModel: DeviceFormViewModel(deviceId: nil, repository: Fixtures.repository([]), messages: messages),
+            onSaved: { [weak self] in self?.savedCount += 1 }
+        )
+        observable.onNameChange("Garagem")
+        observable.onSerialChange("ABC123")
+        observable.onUsernameChange("admin")
+        observable.onPasswordChange("x")
+
+        observable.submit()
+
+        XCTAssertEqual(observable.state.errors.serial, .invalidSerial)
+        let message = await firstMessage(of: messages)
+        XCTAssertEqual(message?.text, "O número de série deve conter 13 caracteres.")
+        XCTAssertEqual(savedCount, 0)
     }
 
     func testInvalidSubmitShowsErrorsImmediately() {
@@ -65,7 +110,7 @@ final class DeviceFormObservableTests: XCTestCase {
         let repository = Fixtures.repository([])
         let observable = makeObservable(repository: repository)
         observable.onNameChange("Garagem")
-        observable.onSerialChange("S1")
+        observable.onSerialChange("ABC1234567890")
         observable.onUsernameChange("admin")
         observable.onPasswordChange("x")
 

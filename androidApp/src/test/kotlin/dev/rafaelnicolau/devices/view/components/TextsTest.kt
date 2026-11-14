@@ -53,6 +53,15 @@ class TextsTest {
         assertEquals("Informe os 12 caracteres do MAC (0-9, A-F).", FieldError.INVALID_MAC.text())
         assertEquals("A senha deve ter 4 ou 6 dígitos.", FieldError.INVALID_ALARM_PASSWORD.text())
         assertEquals("Já está em uso por outro dispositivo.", FieldError.DUPLICATE.text())
+        assertEquals("O número de série deve conter 13 caracteres.", FieldError.INVALID_SERIAL.text())
+    }
+
+    @Test
+    fun invalidFormMessageIsTheFieldErrorText() {
+        assertEquals(
+            "O número de série deve conter 13 caracteres.",
+            UserMessage.Invalid(FieldError.INVALID_SERIAL).text(),
+        )
     }
 
     @Test

@@ -16,6 +16,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -154,7 +155,7 @@ class DeviceFormViewModelTest {
 
     private fun DeviceFormViewModel.fillValidVideo() {
         onNameChange("  Garagem  ")
-        onSerialChange(" S9 ")
+        onSerialChange("ABC1234567890")
         onUsernameChange(" admin ")
         onPasswordChange(" senha ")
     }
@@ -180,7 +181,7 @@ class DeviceFormViewModelTest {
 
         val created = assertIs<Device.Video>(repository.observeDevices().first().single())
         assertEquals("Garagem", created.name)
-        assertEquals("S9", created.serial)
+        assertEquals("ABC1234567890", created.serial)
         assertEquals("admin", created.username)
         assertEquals(" senha ", created.password, "spaces may be part of a camera password")
     }
@@ -197,6 +198,70 @@ class DeviceFormViewModelTest {
         assertEquals(FieldError.REQUIRED, errors.username)
         assertEquals(FieldError.REQUIRED, errors.password)
         assertNull(errors.macAddress)
+    }
+
+    @Test
+    fun serialStopsAtThirteenCharacters() = runTest {
+        val viewModel = DeviceFormViewModel(null, InMemoryDeviceRepository(), messages)
+
+        viewModel.onSerialChange("ABC1234567890XYZ")
+
+        assertEquals("ABC1234567890", viewModel.uiState.value.serial)
+    }
+
+    @Test
+    fun shortSerialBlocksSavingAndExplainsWhyInAToast() = runTest {
+        val repository = InMemoryDeviceRepository()
+        val viewModel = DeviceFormViewModel(null, repository, messages)
+        viewModel.fillValidVideo()
+        viewModel.onSerialChange("ABC123")
+
+        viewModel.submit()
+        advanceUntilIdle()
+
+        assertEquals(FieldError.INVALID_SERIAL, viewModel.uiState.value.errors.serial)
+        assertEquals(UserMessage.Invalid(FieldError.INVALID_SERIAL), messages.messages.first())
+        assertTrue(repository.observeDevices().first().isEmpty(), "nothing is saved")
+    }
+
+    @Test
+    fun otherValidationErrorsDoNotShowAToast() = runTest {
+        val viewModel = DeviceFormViewModel(null, InMemoryDeviceRepository(), messages)
+
+        viewModel.submit()
+        advanceUntilIdle()
+
+        assertNull(withTimeoutOrNull(100) { messages.messages.first() }, "empty fields are shown under each field only")
+    }
+
+    @Test
+    fun switchingTypeEmptiesEveryField() = runTest {
+        val viewModel = DeviceFormViewModel(null, InMemoryDeviceRepository(), messages)
+        viewModel.fillValidVideo()
+
+        viewModel.onTypeChange(DeviceType.ALARM)
+
+        val alarm = viewModel.uiState.value
+        assertEquals(DeviceType.ALARM, alarm.type)
+        assertEquals(listOf("", "", "", "", ""), listOf(alarm.name, alarm.macAddress, alarm.serial, alarm.username, alarm.password))
+
+        viewModel.fillValidAlarm()
+        viewModel.onTypeChange(DeviceType.VIDEO)
+
+        val video = viewModel.uiState.value
+        assertEquals(DeviceType.VIDEO, video.type)
+        assertEquals(listOf("", "", "", "", ""), listOf(video.name, video.macAddress, video.serial, video.username, video.password))
+    }
+
+    @Test
+    fun choosingTheSameTypeAgainKeepsWhatWasTyped() = runTest {
+        val viewModel = DeviceFormViewModel(null, InMemoryDeviceRepository(), messages)
+        viewModel.fillValidAlarm()
+
+        viewModel.onTypeChange(DeviceType.ALARM)
+
+        assertEquals("Portão", viewModel.uiState.value.name)
+        assertEquals("aa:bb:cc:dd:ee:ff", viewModel.uiState.value.macAddress)
     }
 
     @Test

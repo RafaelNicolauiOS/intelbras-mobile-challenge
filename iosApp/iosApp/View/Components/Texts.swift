@@ -12,6 +12,8 @@ extension UserMessage {
             }
         case .failure(let failure):
             return failure.error.message
+        case .invalid(let invalid):
+            return invalid.error.text
         }
     }
 }
@@ -35,6 +37,7 @@ extension FieldError {
         case .required: return "Campo obrigatório."
         case .invalidMac: return "Informe os 12 caracteres do MAC (0-9, A-F)."
         case .invalidAlarmPassword: return "A senha deve ter 4 ou 6 dígitos."
+        case .invalidSerial: return "O número de série deve conter \(DeviceValidator.shared.SERIAL_LENGTH) caracteres."
         case .duplicate: return "Já está em uso por outro dispositivo."
         }
     }

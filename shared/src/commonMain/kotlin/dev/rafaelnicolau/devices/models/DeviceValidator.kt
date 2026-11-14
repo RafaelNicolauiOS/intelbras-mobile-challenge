@@ -9,6 +9,9 @@ enum class FieldError {
     /** Alarm central password must be exactly 4 or 6 digits. */
     INVALID_ALARM_PASSWORD,
 
+    /** Video device serial number must have exactly [DeviceValidator.SERIAL_LENGTH] characters. */
+    INVALID_SERIAL,
+
     /** The server refused it because another device already uses this value. */
     DUPLICATE,
 }
@@ -26,6 +29,9 @@ data class DeviceFormErrors(
 
 /** Client-side rules mirroring what the API accepts, so the user gets feedback before any request. */
 object DeviceValidator {
+    /** A video device serial number has exactly this many characters; the field accepts no more. */
+    const val SERIAL_LENGTH = 13
+
     private val macRegex = Regex("^[0-9A-F]{12}$")
     private val alarmPasswordRegex = Regex("^(\\d{4}|\\d{6})$")
 
@@ -47,7 +53,8 @@ object DeviceValidator {
         )
         is DeviceDraft.Video -> DeviceFormErrors(
             name = required(draft.name),
-            serial = required(draft.serial),
+            serial = required(draft.serial)
+                ?: FieldError.INVALID_SERIAL.takeUnless { draft.serial.length == SERIAL_LENGTH },
             username = required(draft.username),
             password = required(draft.password),
         )

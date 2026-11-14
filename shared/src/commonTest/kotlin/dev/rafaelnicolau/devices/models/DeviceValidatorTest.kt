@@ -8,7 +8,7 @@ import kotlin.test.assertTrue
 
 class DeviceValidatorTest {
     private val alarm = DeviceDraft.Alarm(name = "Casa", macAddress = "1A2B3C4D5E6F", password = "1234")
-    private val video = DeviceDraft.Video(name = "Garagem", serial = "S1", username = "admin", password = "x")
+    private val video = DeviceDraft.Video(name = "Garagem", serial = "ABC1234567890", username = "admin", password = "x")
 
     @Test
     fun validDraftsHaveNoErrors() {
@@ -66,5 +66,21 @@ class DeviceValidatorTest {
         assertEquals("1A:2B:3C:4D:5E:6F", DeviceValidator.formatMac("1A2B3C4D5E6F"))
         assertEquals("123", DeviceValidator.formatMac("123"))
         assertEquals("1A:2B:3C:4D:5E:6F", alarm.let { Device.Alarm("a", it.name, false, it.macAddress, it.password) }.identifier)
+    }
+
+    @Test
+    fun videoSerialMustHaveExactlyThirteenCharacters() {
+        val valid = video.copy(serial = "ABC1234567890")
+        assertNull(DeviceValidator.validate(valid).serial)
+
+        for (serial in listOf("A", "ABC123456789")) {
+            assertEquals(FieldError.INVALID_SERIAL, DeviceValidator.validate(video.copy(serial = serial)).serial, serial)
+        }
+        assertEquals(FieldError.REQUIRED, DeviceValidator.validate(video.copy(serial = "")).serial, "empty is still 'required'")
+    }
+
+    @Test
+    fun serialLengthIsThirteen() {
+        assertEquals(13, DeviceValidator.SERIAL_LENGTH)
     }
 }

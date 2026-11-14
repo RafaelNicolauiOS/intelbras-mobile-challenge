@@ -80,10 +80,14 @@ class DeviceFormViewModel(
         }
     }
 
-    /** The type picks the API resource, so it can only be chosen when adding. */
+    /**
+     * The type picks the API resource, so it can only be chosen when adding. Switching to
+     * another type starts an empty form: the fields mean different things for each type.
+     * Choosing the type already selected keeps what was typed.
+     */
     fun onTypeChange(type: DeviceType) {
         if (deviceId == null) {
-            state.update { if (type == it.type) it else it.copy(type = type, errors = DeviceFormErrors()) }
+            state.update { if (type == it.type) it else DeviceFormUiState(type = type) }
         }
     }
 
@@ -98,8 +102,12 @@ class DeviceFormViewModel(
         if (value == it.macAddress) it else it.copy(macAddress = value, errors = it.errors.copy(macAddress = null))
     }
 
-    fun onSerialChange(value: String) = state.update {
-        if (value == it.serial) it else it.copy(serial = value, errors = it.errors.copy(serial = null))
+    /** The serial number has a fixed length, so typing or pasting beyond it is cut off. */
+    fun onSerialChange(value: String) {
+        val limited = value.take(DeviceValidator.SERIAL_LENGTH)
+        state.update {
+            if (limited == it.serial) it else it.copy(serial = limited, errors = it.errors.copy(serial = null))
+        }
     }
 
     fun onUsernameChange(value: String) = state.update {
@@ -118,6 +126,9 @@ class DeviceFormViewModel(
         val errors = DeviceValidator.validate(draft)
         if (errors.hasErrors) {
             state.update { it.copy(errors = errors) }
+            // Empty fields are self-explanatory under each field; a short serial number also
+            // gets a toast, since the user may not know it needs an exact length.
+            if (errors.serial == FieldError.INVALID_SERIAL) messages.post(UserMessage.Invalid(FieldError.INVALID_SERIAL))
             return
         }
 
