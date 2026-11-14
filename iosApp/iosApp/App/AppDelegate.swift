@@ -7,8 +7,23 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-        InitializeApp_iosKt.initializeApp(config: Self.apiConfig())
+        InitializeApp_iosKt.initializeApp(config: Self.apiConfig(), telemetry: Self.telemetryConfig())
         return true
+    }
+
+    /// OTLP endpoint and authorization come from the xcconfig files, like the API token.
+    /// An empty endpoint sends nothing; debug builds also print to the console ("[TELEMETRY]").
+    private static func telemetryConfig() -> TelemetryConfig {
+        let info = Bundle.main.infoDictionary ?? [:]
+        let authorization = info["OTLP_AUTHORIZATION"] as? String ?? ""
+        return TelemetryConfig(
+            serviceName: "devices-app",
+            serviceVersion: info["CFBundleShortVersionString"] as? String ?? "",
+            environment: logsRequests ? "debug" : "release",
+            otlpEndpoint: info["OTLP_ENDPOINT"] as? String ?? "",
+            otlpHeaders: authorization.isEmpty ? [:] : ["Authorization": authorization],
+            console: logsRequests
+        )
     }
 
     /// Values come from Config.xcconfig / the git-ignored Secrets.xcconfig, through Info.plist.

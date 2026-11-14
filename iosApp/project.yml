@@ -30,7 +30,11 @@ targets:
           - OpenSans-Variable.ttf
         API_BASE_URL: $(API_BASE_URL)
         API_TOKEN: $(API_TOKEN)
+        OTLP_ENDPOINT: $(OTLP_ENDPOINT)
+        OTLP_AUTHORIZATION: $(OTLP_AUTHORIZATION)
         NSAppTransportSecurity:
+          # Plain HTTP to a telemetry collector on the development machine (localhost from the simulator).
+          NSAllowsLocalNetworking: true
           NSExceptionDomains:
             squadapps.ddns-intelbras.com.br:
               NSExceptionAllowsInsecureHTTPLoads: true

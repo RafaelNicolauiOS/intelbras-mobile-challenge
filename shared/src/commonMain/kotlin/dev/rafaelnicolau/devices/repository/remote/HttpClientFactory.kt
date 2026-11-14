@@ -1,6 +1,7 @@
 package dev.rafaelnicolau.devices.repository.remote
 
 import dev.rafaelnicolau.devices.di.ApiConfig
+import dev.rafaelnicolau.devices.telemetry.Telemetry
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngine
@@ -28,9 +29,11 @@ fun createHttpClient(
     config: ApiConfig,
     engine: HttpClientEngine? = null,
     log: (String) -> Unit = ::printHttpLog,
+    telemetry: Telemetry = Telemetry.disabled,
 ): HttpClient {
     val configure: HttpClientConfig<*>.() -> Unit = {
         if (config.logRequests) installRequestLogging(log)
+        if (telemetry.isEnabled) install(HttpTelemetry) { this.telemetry = telemetry }
         // Non-2xx responses throw, so they are translated to DeviceError in one place.
         expectSuccess = true
         install(ContentNegotiation) {

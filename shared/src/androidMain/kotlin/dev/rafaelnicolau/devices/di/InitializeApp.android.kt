@@ -4,15 +4,16 @@ import android.content.Context
 import androidx.room.Room
 import dev.rafaelnicolau.devices.repository.local.AppDatabase
 import dev.rafaelnicolau.devices.repository.local.DATABASE_FILE_NAME
+import dev.rafaelnicolau.devices.telemetry.TelemetryConfig
 import kotlinx.coroutines.Dispatchers
 
 /** Call once from `Application.onCreate`. */
-fun initializeApp(context: Context, config: ApiConfig) {
+fun initializeApp(context: Context, config: ApiConfig, telemetry: TelemetryConfig = TelemetryConfig()) {
     val appContext = context.applicationContext
     val builder = Room.databaseBuilder<AppDatabase>(
         context = appContext,
         name = appContext.getDatabasePath(DATABASE_FILE_NAME).absolutePath,
     ).setQueryCoroutineContext(Dispatchers.IO)
 
-    AppContainer.initialize(config, builder)
+    AppContainer.initialize(config, telemetry, platform = "android", databaseBuilder = builder)
 }

@@ -14,6 +14,7 @@ Foi construído para **Android e iOS** com **Kotlin Multiplatform (KMP)**: as re
 - [Como os favoritos sobrevivem à sincronização](#como-os-favoritos-sobrevivem-à-sincronização)
 - [Decisões técnicas e trade-offs](#decisões-técnicas-e-trade-offs)
 - [Testes e CI](#testes-e-ci)
+- [Observabilidade](#observabilidade)
 - [O que ficou pendente e o que eu melhoraria](#o-que-ficou-pendente-e-o-que-eu-melhoraria)
 
 ## Como rodar
@@ -258,8 +259,8 @@ Há testes nas três camadas: regras de negócio no `shared` e a camada de apres
 
 | Suíte | Onde roda | Testes |
 |---|---|---:|
-| `shared` (commonTest) | JVM | 111 |
-| `shared` (commonTest + iosTest) | Simulador iOS | 132 |
+| `shared` (commonTest) | JVM | 143 |
+| `shared` (commonTest + iosTest) | Simulador iOS | 166 |
 | `androidApp` | JVM, com Robolectric | 72 |
 | `iosAppTests` | Simulador iOS | 63 |
 
@@ -281,7 +282,10 @@ O alvo iOS do `shared` tem mais testes porque inclui os de repositório e DAO, q
 | `DashboardViewModelTest` | Carregamento, refresh, erro com dados em cache, busca com `debounce`, filtros, contagem, favoritar, remover |
 | `DeviceFormViewModelTest` | Validação dos dois tipos, formulário vazio ao trocar o tipo, limpeza de erros, criação, edição pré-preenchida, envio duplo, conflito 409, nova tentativa |
 | `DeviceDetailsViewModelTest` | Dispositivo exibido, atualizado e removido; aviso de cópia; `clear()` encerra o escopo |
-| `MessageCenterTest` | Cada aviso chega uma única vez, em ordem, mesmo se postado antes de alguém escutar |
+| `MessageCenterTest` | Cada aviso chega uma única vez, em ordem, mesmo se postado antes de alguém escutar; cada aviso vira um evento de telemetria |
+| `TelemetryTest` | Spans e eventos, spans filhos no mesmo trace, erro marcado e repassado, chaves fora da lista permitida descartadas |
+| `OtlpExporterTest` | Formato OTLP/JSON, envio em lotes e por tempo, buffer limitado, novas tentativas em 429/5xx, falha de rede sem afetar o app |
+| `HttpTelemetryTest` | Um span por requisição, ids trocados por `{id}` na rota, erro em 4xx e falha de rede, requisições como filhas de outro span |
 
 ### App Android
 
@@ -325,6 +329,53 @@ Os relatórios de teste (incluindo o `.xcresult` do iOS) ficam disponíveis como
 ### Desempenho
 
 Há uma análise de desempenho, com medições da busca do dashboard na JVM e no Kotlin/Native, em [docs/analise-de-desempenho.md](docs/analise-de-desempenho.md). O plano para o iOS, com o main thread reservado para TextFields e atualizações de view e o trabalho pesado fora dele, está em [docs/estrategia-desempenho-ios.md](docs/estrategia-desempenho-ios.md).
+
+## Observabilidade
+
+O app mede o que acontece em uso e envia para **qualquer backend OpenTelemetry**: um collector próprio, Grafana Cloud, Honeycomb, Datadog… Trocar de backend é só configuração; o código não muda.
+
+### Como funciona
+
+Tudo fica no `shared` ([`telemetry/`](shared/src/commonMain/kotlin/dev/rafaelnicolau/devices/telemetry)), então Android e iOS medem exatamente as mesmas coisas:
+
+| Peça | Papel |
+|---|---|
+| `Telemetry` | Ponto único: mede spans (`span("nome") { … }`) e registra eventos (`log(…)`). Spans iniciados dentro de outro viram filhos dele, no mesmo trace |
+| `TelemetryKeys` | Lista de atributos permitidos. Qualquer outra chave é descartada, então senha, token, MAC, número de série e corpo de requisição nunca saem do aparelho |
+| `OtlpExporter` | Exportador próprio, só com Ktor: envia OTLP/HTTP em JSON, em lotes (100 itens ou a cada 30 s), com buffer limitado e novas tentativas. Roda fora do main thread e nunca lança erro para o app |
+| `ConsoleExporter` | Mostra tudo no console em debug, com o prefixo `[TELEMETRY]` (Logcat no Android, console do Xcode no iOS) |
+
+O que é medido hoje:
+
+| Sinal | Nome | Atributos |
+|---|---|---|
+| Span por requisição HTTP | `GET /alarm-centrals/{id}` | método, rota (ids trocados por `{id}`), host, status, tipo do erro |
+| Span da sincronização | `devices.refresh` | quantidade de alarmes e de vídeos; `DeviceError` em caso de falha. As duas requisições aparecem como filhas |
+| Evento por aviso exibido | `user.message` | tipo do aviso, ex. `device_created`, `failure.network`, `invalid.invalid_serial` |
+
+Os pendentes são enviados quando o app vai para segundo plano (`onStop` no Android, `sceneDidEnterBackground` no iOS).
+
+### Configurar
+
+Sem endpoint, nada sai do aparelho. Os valores ficam nos mesmos arquivos do token da API, fora do git:
+
+- **Android**, `local.properties`: `OTLP_ENDPOINT=…` e, se o backend exigir, `OTLP_AUTHORIZATION=…` (valor do cabeçalho `Authorization`).
+- **iOS**, `iosApp/Config/Secrets.xcconfig`: `OTLP_ENDPOINT = …` e `OTLP_AUTHORIZATION = …`. No xcconfig, `//` inicia comentário, então escreva URLs como `http:/$()/host:porta`.
+
+Use uma chave **só de escrita**: ela vai dentro do app e pode ser extraída. Para controle total, aponte o app para um OpenTelemetry Collector próprio, que guarda a chave real.
+
+### Ver localmente, sem conta em lugar nenhum
+
+```bash
+python3 tools/otlp-receiver.py
+```
+
+O receptor ([tools/otlp-receiver.py](tools/otlp-receiver.py)) escuta na porta 4318, confere o formato OTLP e mostra cada span e evento recebido. Aponte o app para ele:
+
+- emulador Android: `OTLP_ENDPOINT=http://10.0.2.2:4318` (o build de debug permite HTTP para esse endereço);
+- simulador iOS: `OTLP_ENDPOINT = http:/$()/localhost:4318`.
+
+Abra o app, espere a lista carregar e mande-o para segundo plano: os spans de `devices.refresh` e das requisições aparecem no terminal.
 
 ## O que ficou pendente e o que eu melhoraria
 

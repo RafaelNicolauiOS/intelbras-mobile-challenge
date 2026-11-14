@@ -10,6 +10,10 @@ import dev.rafaelnicolau.devices.repository.local.AppDatabase
 import dev.rafaelnicolau.devices.repository.local.buildAppDatabase
 import dev.rafaelnicolau.devices.repository.remote.DeviceApi
 import dev.rafaelnicolau.devices.repository.remote.createHttpClient
+import dev.rafaelnicolau.devices.telemetry.RecordingExporter
+import dev.rafaelnicolau.devices.telemetry.SpanStatus
+import dev.rafaelnicolau.devices.telemetry.Telemetry
+import dev.rafaelnicolau.devices.telemetry.TelemetryKeys
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpHeaders
@@ -48,9 +52,13 @@ class DefaultDeviceRepositoryTest {
         respond(body, status, headersOf(HttpHeaders.ContentType, "application/json"))
     }
 
+    private val telemetryExporter = RecordingExporter()
+    private val telemetry = Telemetry(listOf(telemetryExporter))
+
     private val repository = DefaultDeviceRepository(
-        api = DeviceApi(createHttpClient(ApiConfig("http://api.test", "token"), engine)),
+        api = DeviceApi(createHttpClient(ApiConfig("http://api.test", "token"), engine, telemetry = telemetry)),
         dao = database.deviceDao(),
+        telemetry = telemetry,
     )
 
     @AfterTest
@@ -252,5 +260,32 @@ class DefaultDeviceRepositoryTest {
         repository.refresh()
 
         assertEquals(listOf("v1"), devices().map { it.id })
+    }
+
+    @Test
+    fun refreshIsTracedWithTheCountsAndBothRequestsAsChildren() = runTest {
+        alarmsJson = list(alarm("a1", "Casa"))
+        videosJson = list(video("v1", "Garagem"), video("v2", "Portão"))
+
+        repository.refresh()
+
+        val refresh = telemetryExporter.spans.single { it.name == "devices.refresh" }
+        assertEquals(1, refresh.attributes[TelemetryKeys.ALARM_COUNT])
+        assertEquals(2, refresh.attributes[TelemetryKeys.VIDEO_COUNT])
+        assertEquals(SpanStatus.UNSET, refresh.status)
+        val requests = telemetryExporter.spans.filter { it.parentSpanId == refresh.spanId }.map { it.name }.toSet()
+        assertEquals(setOf("GET /alarm-centrals", "GET /video-devices"), requests)
+    }
+
+    @Test
+    fun failedRefreshIsTracedAsAnError() = runTest {
+        alarmsStatus = HttpStatusCode.Unauthorized
+
+        repository.refresh()
+
+        val refresh = telemetryExporter.spans.single { it.name == "devices.refresh" }
+        assertEquals(SpanStatus.ERROR, refresh.status)
+        assertEquals("UNAUTHORIZED", refresh.attributes[TelemetryKeys.DEVICE_ERROR])
+        assertEquals(0, refresh.attributes[TelemetryKeys.VIDEO_COUNT], "the type that synced is still counted")
     }
 }

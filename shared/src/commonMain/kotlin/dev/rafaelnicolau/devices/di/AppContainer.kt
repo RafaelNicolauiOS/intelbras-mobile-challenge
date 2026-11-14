@@ -7,6 +7,8 @@ import dev.rafaelnicolau.devices.repository.local.AppDatabase
 import dev.rafaelnicolau.devices.repository.local.buildAppDatabase
 import dev.rafaelnicolau.devices.repository.remote.DeviceApi
 import dev.rafaelnicolau.devices.repository.remote.createHttpClient
+import dev.rafaelnicolau.devices.telemetry.Telemetry
+import dev.rafaelnicolau.devices.telemetry.TelemetryConfig
 import dev.rafaelnicolau.devices.viewmodel.DashboardViewModel
 import dev.rafaelnicolau.devices.viewmodel.DeviceDetailsViewModel
 import dev.rafaelnicolau.devices.viewmodel.DeviceFormViewModel
@@ -23,10 +25,21 @@ object AppContainer {
     /** The one channel every ViewModel reports user feedback to. */
     val messageCenter = MessageCenter()
 
-    internal fun initialize(config: ApiConfig, databaseBuilder: RoomDatabase.Builder<AppDatabase>) {
+    /** Disabled until [initialize]; the apps call [Telemetry.flush] when they go to the background. */
+    var telemetry: Telemetry = Telemetry.disabled
+        private set
+
+    internal fun initialize(
+        config: ApiConfig,
+        telemetryConfig: TelemetryConfig,
+        platform: String,
+        databaseBuilder: RoomDatabase.Builder<AppDatabase>,
+    ) {
+        telemetry = telemetryConfig.build(platform)
+        messageCenter.telemetry = telemetry
         val database = databaseBuilder.buildAppDatabase()
-        val api = DeviceApi(createHttpClient(config))
-        deviceRepository = DefaultDeviceRepository(api, database.deviceDao())
+        val api = DeviceApi(createHttpClient(config, telemetry = telemetry))
+        deviceRepository = DefaultDeviceRepository(api, database.deviceDao(), telemetry)
     }
 
     fun dashboardViewModel(): DashboardViewModel = DashboardViewModel(deviceRepository, messageCenter)

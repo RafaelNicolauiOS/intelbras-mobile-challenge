@@ -1,3 +1,8 @@
 # Copy these two lines into local.properties (git-ignored) at the project root.
 API_BASE_URL=http://squadapps.ddns-intelbras.com.br:37025
 API_TOKEN=paste-your-token-here
+
+# Optional telemetry (OpenTelemetry OTLP/HTTP). Empty: nothing is sent.
+# A collector on this machine is reachable from the emulator at 10.0.2.2.
+OTLP_ENDPOINT=
+OTLP_AUTHORIZATION=

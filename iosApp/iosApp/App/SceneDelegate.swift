@@ -1,3 +1,4 @@
+@preconcurrency import Shared
 import UIKit
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
@@ -17,5 +18,10 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         self.window = window
         appCoordinator = coordinator
+    }
+
+    /// The app may be suspended or killed in the background: send what telemetry has buffered now.
+    func sceneDidEnterBackground(_ scene: UIScene) {
+        AppContainer.shared.telemetry.flush()
     }
 }
