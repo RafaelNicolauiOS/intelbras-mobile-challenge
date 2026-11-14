@@ -31,10 +31,27 @@ class TelemetryConfigTest {
 
     @Test
     fun resourceNamesTheServiceAndPlatform() {
-        val resource = TelemetryConfig(serviceVersion = "1.0", environment = "debug").resourceAttributes("android")
+        val resource = TelemetryConfig(serviceVersion = "1.0", environment = "debug").resourceAttributes(TelemetryDevice(platform = "android"))
 
         assertEquals("devices-app", resource["service.name"])
         assertEquals("android", resource["os.type"])
         assertEquals("debug", resource["deployment.environment.name"])
+    }
+
+    @Test
+    fun resourceDescribesTheDevice() {
+        val device = TelemetryDevice(platform = "ios", id = "6F1C-UUID", model = "iPhone15,2", manufacturer = "Apple")
+        val resource = TelemetryConfig().resourceAttributes(device)
+
+        assertEquals("6F1C-UUID", resource["device.id"])
+        assertEquals("iPhone15,2", resource["device.model.identifier"])
+        assertEquals("Apple", resource["device.manufacturer"])
+    }
+
+    @Test
+    fun unknownDeviceFieldsAreLeftOut() {
+        val resource = TelemetryConfig().resourceAttributes(TelemetryDevice(platform = "android"))
+
+        assertTrue(resource.keys.none { it.startsWith("device.") })
     }
 }

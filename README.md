@@ -259,8 +259,8 @@ Há testes nas três camadas: regras de negócio no `shared` e a camada de apres
 
 | Suíte | Onde roda | Testes |
 |---|---|---:|
-| `shared` (commonTest) | JVM | 151 |
-| `shared` (commonTest + iosTest) | Simulador iOS | 174 |
+| `shared` (commonTest) | JVM | 153 |
+| `shared` (commonTest + iosTest) | Simulador iOS | 176 |
 | `androidApp` | JVM, com Robolectric | 72 |
 | `iosAppTests` | Simulador iOS | 63 |
 
@@ -352,6 +352,17 @@ O que é medido hoje:
 | Span por requisição HTTP | `GET /alarm-centrals/{id}` | método, rota (ids trocados por `{id}`), host, status, tipo do erro |
 | Span da sincronização | `devices.refresh` | quantidade de alarmes e de vídeos; `DeviceError` em caso de falha. As duas requisições aparecem como filhas |
 | Evento por aviso exibido | `user.message` | tipo do aviso, ex. `device_created`, `failure.network`, `invalid.invalid_serial` |
+
+Todo envio leva também a identificação do app e do aparelho (atributos de *resource* do OpenTelemetry), preenchida pelo `initializeApp` de cada plataforma:
+
+| Atributo | Android | iOS |
+|---|---|---|
+| `os.type` | `android` | `ios` |
+| `device.id` | `Settings.Secure.ANDROID_ID` (por aparelho, usuário e chave de assinatura; muda só com reset de fábrica) | `identifierForVendor` (mesmo para os apps do mesmo fornecedor; muda quando o último deles é removido) |
+| `device.model.identifier` | `Build.MODEL`, ex. `Pixel 7` | identificador do hardware, ex. `iPhone15,2` |
+| `device.manufacturer` | `Build.MANUFACTURER` | `Apple` |
+
+O `device.id` é um identificador persistente do aparelho: em produção, informe-o na política de privacidade (LGPD).
 
 Os pendentes são enviados quando o app vai para segundo plano (`onStop` no Android, `sceneDidEnterBackground` no iOS) e, no Android, também ao voltar (`onStart`).
 

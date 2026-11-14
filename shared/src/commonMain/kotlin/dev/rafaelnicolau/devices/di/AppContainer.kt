@@ -9,6 +9,7 @@ import dev.rafaelnicolau.devices.repository.remote.DeviceApi
 import dev.rafaelnicolau.devices.repository.remote.createHttpClient
 import dev.rafaelnicolau.devices.telemetry.Telemetry
 import dev.rafaelnicolau.devices.telemetry.TelemetryConfig
+import dev.rafaelnicolau.devices.telemetry.TelemetryDevice
 import dev.rafaelnicolau.devices.viewmodel.DashboardViewModel
 import dev.rafaelnicolau.devices.viewmodel.DeviceDetailsViewModel
 import dev.rafaelnicolau.devices.viewmodel.DeviceFormViewModel
@@ -32,10 +33,10 @@ object AppContainer {
     internal fun initialize(
         config: ApiConfig,
         telemetryConfig: TelemetryConfig,
-        platform: String,
+        device: TelemetryDevice,
         databaseBuilder: RoomDatabase.Builder<AppDatabase>,
     ) {
-        telemetry = telemetryConfig.build(platform)
+        telemetry = telemetryConfig.build(device)
         messageCenter.telemetry = telemetry
         val database = databaseBuilder.buildAppDatabase()
         val api = DeviceApi(createHttpClient(config, telemetry = telemetry))

@@ -24,7 +24,7 @@ data class TelemetryConfig(
     /** Also print spans and logs to the console. */
     val console: Boolean = false,
 ) {
-    internal fun build(platform: String): Telemetry {
+    internal fun build(device: TelemetryDevice): Telemetry {
         val exporters = buildList {
             if (console) add(ConsoleExporter())
             if (otlpEndpoint.isNotBlank()) {
@@ -32,7 +32,7 @@ data class TelemetryConfig(
                     OtlpExporter(
                         endpoint = otlpEndpoint,
                         headers = otlpHeaders,
-                        resource = resourceAttributes(platform),
+                        resource = resourceAttributes(device),
                         scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
                         engine = defaultTelemetryEngine(),
                         // With the console on, each export reports its result, e.g. a rejected key.
@@ -44,12 +44,18 @@ data class TelemetryConfig(
         return Telemetry(exporters)
     }
 
-    /** Describes the app sending the data; resource attributes are not subject to the key allowlist. */
-    internal fun resourceAttributes(platform: String): Map<String, Any> = buildMap {
+    /**
+     * Describes the app and the device sending the data; resource attributes are not subject
+     * to the key allowlist. Device fields the platform could not read are left out.
+     */
+    internal fun resourceAttributes(device: TelemetryDevice): Map<String, Any> = buildMap {
         put("service.name", serviceName)
         if (serviceVersion.isNotBlank()) put("service.version", serviceVersion)
         if (environment.isNotBlank()) put("deployment.environment.name", environment)
-        put("os.type", platform)
+        put("os.type", device.platform)
+        if (device.id.isNotBlank()) put("device.id", device.id)
+        if (device.model.isNotBlank()) put("device.model.identifier", device.model)
+        if (device.manufacturer.isNotBlank()) put("device.manufacturer", device.manufacturer)
         put("telemetry.sdk.name", "devices-otlp")
         put("telemetry.sdk.language", "kotlin")
     }

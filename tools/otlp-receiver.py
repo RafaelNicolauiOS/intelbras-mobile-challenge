@@ -58,7 +58,9 @@ def check_traces(body):
                     f"{attrs(span['attributes'])}"
                 )
         lines.insert(0, f"traces from {resource.get('service.name')} {resource.get('os.type')} "
-                        f"{resource.get('service.version', '')} {resource.get('deployment.environment.name', '')}")
+                        f"{resource.get('service.version', '')} {resource.get('deployment.environment.name', '')} "
+                        f"device={resource.get('device.manufacturer', '-')} {resource.get('device.model.identifier', '-')} "
+                        f"id={resource.get('device.id', '-')}")
     return lines
 
 

@@ -52,7 +52,7 @@ class OtlpExporterTest {
     private fun TestScope.exporter(batchSize: Int = 100, maxBuffered: Int = 500) = OtlpExporter(
         endpoint = "http://collector.test:4318/",
         headers = mapOf(HttpHeaders.Authorization to "Basic key"),
-        resource = TelemetryConfig(serviceVersion = "1.0", environment = "debug").resourceAttributes("ios"),
+        resource = TelemetryConfig(serviceVersion = "1.0", environment = "debug").resourceAttributes(TelemetryDevice(platform = "ios")),
         scope = backgroundScope,
         engine = engine,
         batchSize = batchSize,
