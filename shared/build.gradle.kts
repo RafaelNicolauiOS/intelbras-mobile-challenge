@@ -45,6 +45,9 @@ kotlin {
         androidMain.dependencies {
             // CIO instead of OkHttp: current OkHttp requires compileSdk 37 and this project is pinned to 36.
             implementation(libs.ktor.client.cio)
+            // Telemetry goes over HTTPS: the Android engine uses the platform TLS, which honors the
+            // network security config (CIO's own TLS is rejected once that config has domain rules).
+            implementation(libs.ktor.client.android)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

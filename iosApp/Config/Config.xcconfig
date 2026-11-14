@@ -6,7 +6,7 @@ API_TOKEN =
 // Optional telemetry (OpenTelemetry OTLP/HTTP). Empty: nothing is sent.
 // e.g. http:/$()/localhost:4318 for a collector on this machine.
 OTLP_ENDPOINT =
-OTLP_AUTHORIZATION =
+OTLP_HEADERS =
 
 // Local, git-ignored overrides (the API token). Copy Secrets.example.xcconfig to create it.
 #include? "Secrets.xcconfig"

@@ -4,5 +4,6 @@ API_TOKEN=paste-your-token-here
 
 # Optional telemetry (OpenTelemetry OTLP/HTTP). Empty: nothing is sent.
 # A collector on this machine is reachable from the emulator at 10.0.2.2.
+# New Relic (US): OTLP_ENDPOINT=https://otlp.nr-data.net:4318 and OTLP_HEADERS=api-key=<license key>
 OTLP_ENDPOINT=
-OTLP_AUTHORIZATION=
+OTLP_HEADERS=

@@ -212,32 +212,59 @@ class OtlpExporterTest {
     }
 
     @Test
-    fun aBatchIsDroppedAfterTheLastAttempt() = runTest {
+    fun aBatchThatKeepsFailingIsKeptForTheNextFlush() = runTest {
         answers += List(3) { HttpStatusCode.InternalServerError }
         val exporter = exporter()
         exporter.export(span())
         exporter.flushAndWait()
+        assertEquals(3, sent.size, "three attempts, then kept")
 
         exporter.flushAndWait()
 
-        assertEquals(3, sent.size, "no fourth attempt, and nothing left to resend")
+        assertEquals(4, sent.size, "sent again on the next flush, and accepted")
+        exporter.flushAndWait()
+        assertEquals(4, sent.size, "nothing left once it went through")
     }
 
     @Test
-    fun networkFailureNeverReachesTheApp() = runTest {
-        val failing = OtlpExporter(
+    fun offlineDataIsSentOnceTheNetworkIsBack() = runTest {
+        var online = false
+        val received = mutableListOf<String>()
+        val exporter = OtlpExporter(
             endpoint = "http://collector.test:4318",
             headers = emptyMap(),
             resource = emptyMap(),
             scope = backgroundScope,
-            engine = MockEngine { throw IOException("offline") },
+            engine = MockEngine { request ->
+                if (!online) throw IOException("network access blocked")
+                received += request.url.encodedPath
+                respond("{}", HttpStatusCode.OK)
+            },
             retryDelay = 1.seconds,
         )
-        failing.export(span())
+        exporter.export(span())
+        exporter.export(log())
+        exporter.flushAndWait()
+        assertTrue(received.isEmpty())
 
-        failing.flushAndWait()
-        failing.export(span())
-        failing.flushAndWait()
+        online = true
+        exporter.flushAndWait()
+
+        assertEquals(listOf("/v1/traces", "/v1/logs"), received)
+    }
+
+    @Test
+    fun keptDataStillRespectsTheBufferLimit() = runTest {
+        answers += List(3) { HttpStatusCode.ServiceUnavailable }
+        val exporter = exporter(maxBuffered = 2)
+        exporter.export(span("first"))
+        exporter.flushAndWait()
+
+        listOf("second", "third").forEach { exporter.export(span(it)) }
+        exporter.flushAndWait()
+
+        val names = sent.last().json.firstSpan.map { it.jsonObject["name"]!!.jsonPrimitive.content }
+        assertEquals(listOf("second", "third"), names, "the oldest gave way to newer data")
     }
 
     @Test
@@ -253,5 +280,53 @@ class OtlpExporterTest {
         val spans = sent.single().json.firstSpan.map { it.jsonObject }
         assertEquals(listOf("GET /alarm-centrals", "devices.refresh"), spans.map { it["name"]!!.jsonPrimitive.content })
         assertEquals(spans[1]["spanId"], spans[0]["parentSpanId"])
+    }
+
+    @Test
+    fun eachExportReportsItsResultWithoutTheHeaders() = runTest {
+        answers += HttpStatusCode.Forbidden
+        val lines = mutableListOf<String>()
+        val exporter = OtlpExporter(
+            endpoint = "http://collector.test:4318",
+            headers = mapOf("api-key" to "secret-key"),
+            resource = emptyMap(),
+            scope = backgroundScope,
+            engine = engine,
+            report = { lines += it },
+        )
+
+        exporter.export(span())
+        exporter.flushAndWait()
+        exporter.export(log())
+        exporter.flushAndWait()
+
+        assertEquals(
+            listOf(
+                "[TELEMETRY] export /v1/traces 1 spans: dropped (HTTP 403)",
+                "[TELEMETRY] export /v1/logs 1 logs: sent (HTTP 200)",
+            ),
+            lines,
+        )
+        assertTrue(lines.none { "secret-key" in it })
+    }
+
+    @Test
+    fun unreachableBackendIsReportedAsKept() = runTest {
+        answers += List(3) { HttpStatusCode.BadGateway }
+        val lines = mutableListOf<String>()
+        val exporter = OtlpExporter(
+            endpoint = "http://collector.test:4318",
+            headers = emptyMap(),
+            resource = emptyMap(),
+            scope = backgroundScope,
+            engine = engine,
+            retryDelay = 1.seconds,
+            report = { lines += it },
+        )
+        exporter.export(span())
+
+        exporter.flushAndWait()
+
+        assertEquals(listOf("[TELEMETRY] export /v1/traces 1 spans: kept for later (HTTP 502)"), lines)
     }
 }

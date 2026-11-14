@@ -19,7 +19,16 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /** The app may be killed in the background: send what telemetry has buffered now. */
+    /**
+     * Sends what telemetry kept while the app was away (Android blocks network access in the
+     * background, so exports attempted then are kept, not lost).
+     */
+    override fun onStart() {
+        super.onStart()
+        AppContainer.telemetry.flush()
+    }
+
+    /** Best effort: Android may already have blocked network access; if so the data is kept for [onStart]. */
     override fun onStop() {
         super.onStop()
         AppContainer.telemetry.flush()

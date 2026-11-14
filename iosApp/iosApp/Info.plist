@@ -37,10 +37,10 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>OTLP_AUTHORIZATION</key>
-	<string>$(OTLP_AUTHORIZATION)</string>
 	<key>OTLP_ENDPOINT</key>
 	<string>$(OTLP_ENDPOINT)</string>
+	<key>OTLP_HEADERS</key>
+	<string>$(OTLP_HEADERS)</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>OpenSans-Variable.ttf</string>

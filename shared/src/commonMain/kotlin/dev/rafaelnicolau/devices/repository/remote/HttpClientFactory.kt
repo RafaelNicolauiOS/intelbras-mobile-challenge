@@ -49,7 +49,8 @@ fun createHttpClient(
             contentType(ContentType.Application.Json)
         }
     }
-    return if (engine != null) HttpClient(engine, configure) else HttpClient(configure)
+    val chosen = engine ?: defaultApiEngine()
+    return if (chosen != null) HttpClient(chosen, configure) else HttpClient(configure)
 }
 
 private const val LOG_TAG = "[HTTP]"

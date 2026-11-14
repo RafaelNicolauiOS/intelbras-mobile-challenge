@@ -30,9 +30,9 @@ android {
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         buildConfigField("String", "API_TOKEN", "\"${secret("API_TOKEN")}\"")
         // Telemetry: an OTLP/HTTP receiver (e.g. http://10.0.2.2:4318 for a collector on this machine).
-        // Empty means nothing leaves the device. The authorization is a write-only key, if any.
+        // Empty means nothing leaves the device. Headers as name=value,name2=value2 (e.g. api-key=…).
         buildConfigField("String", "OTLP_ENDPOINT", "\"${secret("OTLP_ENDPOINT")}\"")
-        buildConfigField("String", "OTLP_AUTHORIZATION", "\"${secret("OTLP_AUTHORIZATION")}\"")
+        buildConfigField("String", "OTLP_HEADERS", "\"${secret("OTLP_HEADERS")}\"")
     }
 
     buildFeatures {

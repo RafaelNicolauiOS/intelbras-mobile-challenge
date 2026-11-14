@@ -31,7 +31,9 @@ import kotlin.time.Duration.Companion.seconds
  *   which the app runs off the main thread;
  * - at most [maxQueued] items wait to be processed and [maxBuffered] wait to be sent;
  *   past that the oldest are dropped, so memory stays bounded while offline;
- * - a batch that fails is retried [maxAttempts] times, then dropped;
+ * - a batch that cannot reach the backend (no network, the app in the background, 429, 5xx)
+ *   is tried [maxAttempts] times and then **kept** for the next flush; only a batch the
+ *   backend rejects for good (other 4xx) is dropped;
  * - it has its own HTTP client, so its requests are not traced themselves.
  */
 class OtlpExporter(
@@ -46,6 +48,8 @@ class OtlpExporter(
     flushInterval: Duration = 30.seconds,
     private val maxAttempts: Int = 3,
     private val retryDelay: Duration = 2.seconds,
+    /** Receives one line per export with its outcome, never the headers; for debug builds. */
+    private val report: ((String) -> Unit)? = null,
 ) : TelemetryExporter {
 
     private sealed interface Message {
@@ -121,37 +125,71 @@ class OtlpExporter(
         addLast(item)
     }
 
+    private enum class Result { SENT, REJECTED, UNREACHABLE }
+
     private suspend fun sendAll() {
-        while (spans.isNotEmpty()) {
-            val batch = spans.take(batchSize)
-            repeat(batch.size) { spans.removeFirst() }
-            send("v1/traces", otlpJson.encodeToString(OtlpTracesRequest.serializer(), tracesRequest(otlpResource, otlpScope, batch)))
+        val reached = sendQueue(spans, "v1/traces", "spans") {
+            otlpJson.encodeToString(OtlpTracesRequest.serializer(), tracesRequest(otlpResource, otlpScope, it))
         }
-        while (logs.isNotEmpty()) {
-            val batch = logs.take(batchSize)
-            repeat(batch.size) { logs.removeFirst() }
-            send("v1/logs", otlpJson.encodeToString(OtlpLogsRequest.serializer(), logsRequest(otlpResource, otlpScope, batch)))
+        if (!reached) return
+        sendQueue(logs, "v1/logs", "logs") {
+            otlpJson.encodeToString(OtlpLogsRequest.serializer(), logsRequest(otlpResource, otlpScope, it))
         }
     }
 
-    /** Retries network failures, 429 and 5xx; any other answer will not change, so the batch is dropped. */
-    private suspend fun send(path: String, body: String) {
+    /** Sends [queue] in batches; returns false, keeping the unsent batch, when the backend is unreachable. */
+    private suspend fun <T> sendQueue(
+        queue: ArrayDeque<T>,
+        path: String,
+        noun: String,
+        encode: (List<T>) -> String,
+    ): Boolean {
+        while (queue.isNotEmpty()) {
+            val batch = queue.take(batchSize)
+            repeat(batch.size) { queue.removeFirst() }
+            if (send(path, "${batch.size} $noun", encode(batch)) == Result.UNREACHABLE) {
+                // Back at the front, oldest first; if newer items filled the buffer meanwhile, the oldest give way.
+                batch.asReversed().forEach { if (queue.size < maxBuffered) queue.addFirst(it) }
+                return false
+            }
+        }
+        return true
+    }
+
+    private suspend fun send(path: String, what: String, body: String): Result {
         val url = endpoint.trimEnd('/') + "/" + path
+        var outcome = ""
         for (attempt in 1..maxAttempts) {
-            val retry = try {
+            val result = try {
                 val response = client.post(url) {
                     headers { this@OtlpExporter.headers.forEach { (name, value) -> append(name, value) } }
                     setBody(TextContent(body, ContentType.Application.Json))
                 }
                 val status = response.status
-                !status.isSuccess() && (status == HttpStatusCode.TooManyRequests || status.value >= 500)
+                outcome = "HTTP ${status.value}"
+                when {
+                    status.isSuccess() -> Result.SENT
+                    status == HttpStatusCode.TooManyRequests || status.value >= 500 -> Result.UNREACHABLE
+                    else -> Result.REJECTED
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                true
+                // Class and message only: they say what failed (DNS, TLS, timeout) and never carry the headers.
+                outcome = listOfNotNull(e::class.simpleName, e.message?.take(160)).joinToString(": ")
+                Result.UNREACHABLE
             }
-            if (!retry) return
-            if (attempt < maxAttempts) delay(retryDelay * attempt)
+            if (result != Result.UNREACHABLE || attempt == maxAttempts) {
+                val label = when (result) {
+                    Result.SENT -> "sent"
+                    Result.REJECTED -> "dropped"
+                    Result.UNREACHABLE -> "kept for later"
+                }
+                report?.invoke("[TELEMETRY] export /$path $what: $label ($outcome)")
+                return result
+            }
+            delay(retryDelay * attempt)
         }
+        return Result.UNREACHABLE
     }
 }

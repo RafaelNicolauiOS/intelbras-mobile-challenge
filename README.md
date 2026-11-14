@@ -259,8 +259,8 @@ Há testes nas três camadas: regras de negócio no `shared` e a camada de apres
 
 | Suíte | Onde roda | Testes |
 |---|---|---:|
-| `shared` (commonTest) | JVM | 143 |
-| `shared` (commonTest + iosTest) | Simulador iOS | 166 |
+| `shared` (commonTest) | JVM | 151 |
+| `shared` (commonTest + iosTest) | Simulador iOS | 174 |
 | `androidApp` | JVM, com Robolectric | 72 |
 | `iosAppTests` | Simulador iOS | 63 |
 
@@ -353,14 +353,27 @@ O que é medido hoje:
 | Span da sincronização | `devices.refresh` | quantidade de alarmes e de vídeos; `DeviceError` em caso de falha. As duas requisições aparecem como filhas |
 | Evento por aviso exibido | `user.message` | tipo do aviso, ex. `device_created`, `failure.network`, `invalid.invalid_serial` |
 
-Os pendentes são enviados quando o app vai para segundo plano (`onStop` no Android, `sceneDidEnterBackground` no iOS).
+Os pendentes são enviados quando o app vai para segundo plano (`onStop` no Android, `sceneDidEnterBackground` no iOS) e, no Android, também ao voltar (`onStart`).
+
+Um lote que não chega ao backend (sem rede, app em segundo plano, 429 ou 5xx) é tentado 3 vezes e depois **guardado** para o próximo envio, dentro do limite do buffer. O Android bloqueia a rede de apps em segundo plano, então o que falhar ali sai quando o app volta. Só um lote recusado de vez (outros 4xx, como chave inválida) é descartado.
+
+No Android, o exportador usa o motor `ktor-client-android` (`HttpURLConnection`), não o CIO da API: com o `network_security_config` do app, o TLS do CIO falha com `CertificateException` (*hostname aware checkServerTrusted*). No iOS os dois usam o Darwin.
 
 ### Configurar
 
 Sem endpoint, nada sai do aparelho. Os valores ficam nos mesmos arquivos do token da API, fora do git:
 
-- **Android**, `local.properties`: `OTLP_ENDPOINT=…` e, se o backend exigir, `OTLP_AUTHORIZATION=…` (valor do cabeçalho `Authorization`).
-- **iOS**, `iosApp/Config/Secrets.xcconfig`: `OTLP_ENDPOINT = …` e `OTLP_AUTHORIZATION = …`. No xcconfig, `//` inicia comentário, então escreva URLs como `http:/$()/host:porta`.
+- **Android**, `local.properties`: `OTLP_ENDPOINT=…` e `OTLP_HEADERS=nome=valor` (vários separados por vírgula, no formato padrão do OpenTelemetry).
+- **iOS**, `iosApp/Config/Secrets.xcconfig`: `OTLP_ENDPOINT = …` e `OTLP_HEADERS = nome=valor`. No xcconfig, `//` inicia comentário, então escreva URLs como `https:/$()/host:porta`.
+
+Exemplo para o **New Relic** (conta nos EUA; na Europa o host é `otlp.eu01.nr-data.net`), com a license key gerada em *Add data*:
+
+| Arquivo | Valores |
+|---|---|
+| `local.properties` | `OTLP_ENDPOINT=https://otlp.nr-data.net:4318` e `OTLP_HEADERS=api-key=<license key>` |
+| `Secrets.xcconfig` | `OTLP_ENDPOINT = https:/$()/otlp.nr-data.net:4318` e `OTLP_HEADERS = api-key=<license key>` |
+
+Em debug, cada envio mostra o resultado no console, ex. `[TELEMETRY] export /v1/traces 3 spans: sent (HTTP 200)`. Uma chave recusada aparece como `dropped (HTTP 403)`; sem rede, `kept for later (…)`.
 
 Use uma chave **só de escrita**: ela vai dentro do app e pode ser extraída. Para controle total, aponte o app para um OpenTelemetry Collector próprio, que guarda a chave real.
 
