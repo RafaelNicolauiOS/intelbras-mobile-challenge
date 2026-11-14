@@ -1,6 +1,10 @@
 package dev.rafaelnicolau.devices.telemetry
 
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
+import kotlin.time.Duration.Companion.seconds
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -127,6 +131,37 @@ class TelemetryTest {
         telemetry.flush()
 
         assertEquals(1, exporter.flushes)
+    }
+
+    @Test
+    fun flushAndWaitReturnsOnceEveryExporterHasSent() = runTest {
+        val sent = mutableListOf<String>()
+        fun slow(name: String, seconds: Int) = object : TelemetryExporter {
+            override fun export(span: SpanData) = Unit
+            override fun export(log: LogData) = Unit
+            override suspend fun flushAndWait() {
+                delay(seconds.seconds)
+                sent += name
+            }
+        }
+
+        Telemetry(listOf(slow("a", 1), slow("b", 3))).flushAndWait()
+
+        assertEquals(listOf("a", "b"), sent)
+        assertEquals(3_000, currentTime, "exporters are flushed together, not one after another")
+    }
+
+    @Test
+    fun flushAndWaitGivesUpInTimeForTheBackgroundLimit() = runTest {
+        val stuck = object : TelemetryExporter {
+            override fun export(span: SpanData) = Unit
+            override fun export(log: LogData) = Unit
+            override suspend fun flushAndWait() = awaitCancellation()
+        }
+
+        Telemetry(listOf(stuck), flushTimeout = 20.seconds).flushAndWait()
+
+        assertEquals(20_000, currentTime)
     }
 
     @Test

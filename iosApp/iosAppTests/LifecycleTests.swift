@@ -103,3 +103,60 @@ final class LifecycleTests: XCTestCase {
         await waitUntil(timeout: 3) { details.observable.isStopped }
     }
 }
+
+/// Telemetry sent on entering the background must finish before iOS suspends the app.
+@MainActor
+final class BackgroundTaskRunnerTests: XCTestCase {
+    private var begun: [String] = []
+    private var ended: [UIBackgroundTaskIdentifier] = []
+    private var expire: (@MainActor @Sendable () -> Void)?
+
+    private func makeRunner() -> BackgroundTaskRunner {
+        BackgroundTaskRunner(
+            begin: { name, expiration in
+                self.begun.append(name)
+                self.expire = expiration
+                return UIBackgroundTaskIdentifier(rawValue: 42)
+            },
+            end: { self.ended.append($0) }
+        )
+    }
+
+    func testTheTaskEndsOnceTheWorkIsDone() async {
+        var workDone = false
+
+        await makeRunner().run("telemetry.flush") { workDone = true }.value
+
+        XCTAssertTrue(workDone)
+        XCTAssertEqual(begun, ["telemetry.flush"])
+        XCTAssertEqual(ended, [UIBackgroundTaskIdentifier(rawValue: 42)])
+    }
+
+    func testTheTaskStaysOpenWhileTheWorkRuns() async {
+        let (gate, release) = AsyncStream.makeStream(of: Void.self)
+        let running = makeRunner().run("telemetry.flush") {
+            for await _ in gate { break }
+        }
+        await Task.yield()
+
+        XCTAssertTrue(ended.isEmpty, "ending early lets iOS suspend the app mid-request")
+
+        release.yield()
+        await running.value
+        XCTAssertEqual(ended.count, 1)
+    }
+
+    func testWhenTimeRunsOutTheTaskEndsOnlyOnce() async {
+        let (gate, release) = AsyncStream.makeStream(of: Void.self)
+        let running = makeRunner().run("telemetry.flush") {
+            for await _ in gate { break }
+        }
+
+        expire?()
+        XCTAssertEqual(ended.count, 1)
+
+        release.yield()
+        await running.value
+        XCTAssertEqual(ended.count, 1)
+    }
+}

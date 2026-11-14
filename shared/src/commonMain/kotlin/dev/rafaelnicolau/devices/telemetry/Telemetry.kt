@@ -1,12 +1,17 @@
 package dev.rafaelnicolau.devices.telemetry
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 import kotlin.random.Random
 import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 
 /**
@@ -22,6 +27,7 @@ class Telemetry(
     private val allowedKeys: Set<String> = TelemetryKeys.allowed,
     private val clock: TelemetryClock = SystemTelemetryClock,
     private val ids: TelemetryIds = RandomTelemetryIds,
+    private val flushTimeout: Duration = 20.seconds,
 ) {
     val isEnabled: Boolean get() = exporters.isNotEmpty()
 
@@ -83,6 +89,17 @@ class Telemetry(
     /** Asks every exporter to send what it has buffered, e.g. when the app goes to the background. */
     fun flush() {
         exporters.forEach { it.flush() }
+    }
+
+    /**
+     * Sends what every exporter has buffered and waits for it, for at most [flushTimeout].
+     * iOS calls it inside a background task, which must end before the system's limit (~30 s);
+     * whatever is not sent in time stays buffered for the next flush.
+     */
+    suspend fun flushAndWait() {
+        withTimeoutOrNull(flushTimeout) {
+            coroutineScope { exporters.forEach { launch { it.flushAndWait() } } }
+        }
     }
 
     private fun allowed(attributes: Map<String, Any>): Map<String, Any> =
@@ -167,6 +184,9 @@ interface TelemetryExporter {
 
     /** Sends whatever is buffered, without waiting for it. */
     fun flush() = Unit
+
+    /** Sends whatever is buffered and returns once it is done; by default the same as [flush]. */
+    suspend fun flushAndWait() = flush()
 }
 
 fun interface TelemetryClock {

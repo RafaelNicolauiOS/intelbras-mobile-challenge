@@ -113,8 +113,8 @@ class OtlpExporter(
         inbox.trySend(Message.Flush(done = null))
     }
 
-    /** Sends everything received so far and waits for it; for tests and shutdown. */
-    suspend fun flushAndWait() {
+    /** Sends everything received so far and waits for it, e.g. while iOS keeps the app alive in the background. */
+    override suspend fun flushAndWait() {
         val done = CompletableDeferred<Unit>()
         inbox.send(Message.Flush(done))
         done.await()

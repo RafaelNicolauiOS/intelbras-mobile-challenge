@@ -259,10 +259,10 @@ Há testes nas três camadas: regras de negócio no `shared` e a camada de apres
 
 | Suíte | Onde roda | Testes |
 |---|---|---:|
-| `shared` (commonTest) | JVM | 153 |
-| `shared` (commonTest + iosTest) | Simulador iOS | 176 |
+| `shared` (commonTest) | JVM | 155 |
+| `shared` (commonTest + iosTest) | Simulador iOS | 178 |
 | `androidApp` | JVM, com Robolectric | 72 |
-| `iosAppTests` | Simulador iOS | 63 |
+| `iosAppTests` | Simulador iOS | 66 |
 
 O alvo iOS do `shared` tem mais testes porque inclui os de repositório e DAO, que usam um Room real em memória e só rodam no simulador iOS (no Android, o Room exige um `Context`).
 
@@ -364,7 +364,7 @@ Todo envio leva também a identificação do app e do aparelho (atributos de *re
 
 O `device.id` é um identificador persistente do aparelho: em produção, informe-o na política de privacidade (LGPD).
 
-Os pendentes são enviados quando o app vai para segundo plano (`onStop` no Android, `sceneDidEnterBackground` no iOS) e, no Android, também ao voltar (`onStart`).
+Os pendentes são enviados quando o app vai para segundo plano (`onStop` no Android, `sceneDidEnterBackground` no iOS) e, no Android, também ao voltar (`onStart`). No iOS, o envio ao ir para segundo plano roda dentro de uma *background task* (`BackgroundTaskRunner`, em `SceneDelegate.swift`): o app pede tempo ao sistema e só a encerra quando `Telemetry.flushAndWait()` termina, com limite de 20 s, abaixo dos ~30 s que o iOS concede. Sem isso o iOS suspendia o app no meio da requisição e, se o app fosse fechado, os dados se perdiam.
 
 Um lote que não chega ao backend (sem rede, app em segundo plano, 429 ou 5xx) é tentado 3 vezes e depois **guardado** para o próximo envio, dentro do limite do buffer. O Android bloqueia a rede de apps em segundo plano, então o que falhar ali sai quando o app volta. Só um lote recusado de vez (outros 4xx, como chave inválida) é descartado.
 
